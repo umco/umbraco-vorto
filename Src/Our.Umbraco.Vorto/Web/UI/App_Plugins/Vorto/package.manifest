@@ -1,0 +1,46 @@
+﻿{
+    propertyEditors: [    
+		{ 
+			alias: "Our.Umbraco.Vorto",
+			name:  "Vorto",
+			editor: {
+				view: "~/App_Plugins/Vorto/views/vorto.html",
+				valueType: "JSON"
+			}, 
+			prevalues: {
+				fields: [	
+                    {			
+						label: "Data Type",
+						description: "Select the data type to wrap.",
+						key: "dataType",
+						view: "/App_Plugins/Vorto/views/vorto.propertyEditorPicker.html",
+						validation: [
+			 				{
+								type: "Required"         
+							}   
+						]
+					},	
+                    {					
+						label: "Language Nodes XPath",
+						description: "Enter an XPath statement to locate nodes containing language settings.",
+						key: "xpath",
+						view: "textstring"
+					},	
+                    {					
+						label: "Display Native Language Names",
+						description: "Set whether to display language names in their native form.",
+						key: "displayNativeNames",
+						view: "boolean"
+					}
+				]
+			}
+        }
+    ],
+    javascript: [
+		'~/App_Plugins/Vorto/js/jquery.hoverIntent.minified.js',
+		'~/App_Plugins/Vorto/js/vorto.js'
+    ],
+	"css": [
+        "~/App_Plugins/Vorto/css/vorto.css"
+    ]
+} 

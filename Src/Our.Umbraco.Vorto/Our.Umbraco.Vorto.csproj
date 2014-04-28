@@ -221,6 +221,8 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Constants.cs" />
+    <Compile Include="Helpers\VortoHelper.cs" />
     <Compile Include="Models\DataTypeInfo.cs" />
     <Compile Include="Converters\VortoValueConverter.cs" />
     <Compile Include="Extensions\IPublishedContentExtensions.cs" />
@@ -228,15 +230,17 @@
     <Compile Include="Models\VortoValue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Web\Controllers\VortoApiController.cs" />
+    <Compile Include="Web\Events\VortoCacheExpire.cs" />
+    <Compile Include="Web\PropertyEditors\VortoPropertyEditor.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="packages.config" />
-    <None Include="Web\UI\App_Plugins\Vorto\package.manifest" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="Web\UI\App_Plugins\Vorto\css\vorto.css" />
     <Content Include="Web\UI\App_Plugins\Vorto\js\jquery.hoverIntent.minified.js" />
     <Content Include="Web\UI\App_Plugins\Vorto\js\vorto.js" />
+    <Content Include="Web\UI\App_Plugins\Vorto\views\vorto.languageSourceRadioList.html" />
     <Content Include="Web\UI\App_Plugins\Vorto\views\vorto.propertyEditorPicker.html" />
     <Content Include="Web\UI\App_Plugins\Vorto\views\vorto.html" />
   </ItemGroup>

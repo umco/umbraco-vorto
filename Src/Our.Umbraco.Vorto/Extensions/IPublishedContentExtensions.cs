@@ -2,6 +2,7 @@
 using System.Linq;
 using System.Threading;
 using Newtonsoft.Json;
+using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
 using Umbraco.Core.Models;
@@ -100,8 +101,12 @@ namespace Our.Umbraco.Vorto.Extensions
 					var vortoModel = prop.Value as VortoValue;
 					var value = vortoModel.Values[cultureName];
 
+					// If the value is of type T, just return it
+					//if (value is T)
+					//	return (T)value;
+
 					// Get target datatype
-					var targetDataType = GetTargetDataTypeDefinition(vortoModel.DtdGuid);
+					var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
 
 					// Umbraco has the concept of a IPropertyEditorValueConverter which it 
 					// also queries for property resolvers. However I'm not sure what these
@@ -162,23 +167,6 @@ namespace Our.Umbraco.Vorto.Extensions
 				{
 					Id = dataTypeId
 				}));
-		}
-
-		private static IDataTypeDefinition GetTargetDataTypeDefinition(Guid myId)
-		{
-			return (IDataTypeDefinition)ApplicationContext.Current.ApplicationCache.RequestCache.GetCacheItem(
-				"Vorto_GetTargetDataTypeDefinition_" + myId,
-				() =>
-				{
-					// Get instance of our own datatype so we can lookup the actual datatype from prevalue
-					var services = ApplicationContext.Current.Services;
-					var dtd = services.DataTypeService.GetDataTypeDefinitionById(myId);
-					var preValues = services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
-					var dataType = JsonConvert.DeserializeObject<DataTypeInfo>(preValues["dataType"].Value);
-
-					// Grab an instance of the target datatype
-					return services.DataTypeService.GetDataTypeDefinitionById(dataType.Guid);
-				});
 		}
 	}
 }

@@ -26,9 +26,13 @@
 	<DictionaryItems />
 	<Languages />
 	<DataTypes />
-	<Actions />
-
-	<control />
+  <Actions>
+    <Action runat="install"
+      undo="false"
+      alias="Vorto_DeleteFile"
+      path="/App_Plugins/Vorto/package.manifest" />
+  </Actions>
+  <control />
 
 	<files />
 

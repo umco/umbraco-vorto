@@ -1,0 +1,22 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
+  <metadata>
+    <id>Vorto</id>
+    <version>0.0.0</version>
+    <title>Vorto</title>
+    <description>A 1:1 multilingual property editor wrapper for Umbraco</description>
+    <authors>Matt Brailsford</authors>
+    <projectUrl>https://github.com/mattbrailsford/Vorto</projectUrl>
+    <licenseUrl>http://opensource.org/licenses/MIT</licenseUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <copyright>Copyright (c) Outfield Digital Ltd 2013</copyright>
+    <summary />
+    <language />
+    <dependencies>
+      <dependency id="UmbracoCms.Core" version="7.1.1" />
+    </dependencies>
+  </metadata>
+  <files>
+    <file src="..\MIT-LICENSE.txt" target="MIT-LICENSE.txt" />
+  </files>
+</package>

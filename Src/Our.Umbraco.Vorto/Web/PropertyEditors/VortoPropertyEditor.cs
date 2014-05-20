@@ -46,10 +46,10 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 
 		protected override PreValueEditor CreatePreValueEditor()
 		{
-			return new MortarPreValueEditor();
+			return new VortoPreValueEditor();
 		}
 
-		internal class MortarPreValueEditor : PreValueEditor
+		internal class VortoPreValueEditor : PreValueEditor
 		{
 			[PreValueField("dataType", "Data Type", "/App_Plugins/Vorto/views/vorto.propertyEditorPicker.html", Description = "Select the data type to wrap.")]
 			public string DataType { get; set; }

@@ -229,6 +229,7 @@
     <Compile Include="Models\Language.cs" />
     <Compile Include="Models\VortoValue.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Vorto.cs" />
     <Compile Include="Web\Controllers\VortoApiController.cs" />
     <Compile Include="Web\Events\VortoCacheExpire.cs" />
     <Compile Include="Web\PackageActions\DeleteFile.cs" />

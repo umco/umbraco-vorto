@@ -133,25 +133,43 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 					}));
 			}
 
+			// Raise event to allow for further filtering
+			var args = new FilterLanguagesEventArgs
+			{
+				CurrentPageId = id,
+				ParentPageId = parentId,
+				Languages = languages
+			};
+
+			Vorto.CallFilterLanguages(args);
+
 			// Set active language
 			var currentCulture = Thread.CurrentThread.CurrentUICulture.Name;
-			var activeLanguage = languages.FirstOrDefault(x => x.IsoCode == currentCulture);
 
-			if(activeLanguage == null)
-				activeLanguage = languages.FirstOrDefault(x => x.IsoCode.Contains(currentCulture));
+			// See if one has already been set via the event handler
+			var activeLanguage = args.Languages.FirstOrDefault(x => x.IsDefault);
 
+			// Try settings to exact match of current culture
 			if (activeLanguage == null)
-				activeLanguage = languages.FirstOrDefault(x => currentCulture.Contains(x.IsoCode));
+				activeLanguage = args.Languages.FirstOrDefault(x => x.IsoCode == currentCulture);
 
-			// Could find a good enough match, just select the first language
+			// Try setting to nearest match
 			if (activeLanguage == null)
-				activeLanguage = languages.FirstOrDefault();
+				activeLanguage = args.Languages.FirstOrDefault(x => x.IsoCode.Contains(currentCulture));
+
+			// Try setting to nearest match
+			if (activeLanguage == null)
+				activeLanguage = args.Languages.FirstOrDefault(x => currentCulture.Contains(x.IsoCode));
+
+			// Couldn't find a good enough match, just select the first language
+			if (activeLanguage == null)
+				activeLanguage = args.Languages.FirstOrDefault();
 
 			if (activeLanguage != null)
 				activeLanguage.IsDefault = true;
 
 			// Return results
-			return languages;
+			return args.Languages;
 		}
 	}
 }

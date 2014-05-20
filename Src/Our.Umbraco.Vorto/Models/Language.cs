@@ -2,7 +2,7 @@
 
 namespace Our.Umbraco.Vorto.Models
 {
-	internal class Language
+	public class Language
 	{
 		[JsonProperty("isoCode")]
 		public string IsoCode { get; set; }

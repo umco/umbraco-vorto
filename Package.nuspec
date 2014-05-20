@@ -1,9 +1,9 @@
 ﻿<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
-    <id>Vorto</id>
+    <id>Our.Umbraco.Vorto</id>
     <version>0.0.0</version>
-    <title>Vorto</title>
+    <title>Vorto for Umbraco</title>
     <description>A 1:1 multilingual property editor wrapper for Umbraco</description>
     <authors>Matt Brailsford</authors>
     <projectUrl>https://github.com/mattbrailsford/Vorto</projectUrl>

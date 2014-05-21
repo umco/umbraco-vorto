@@ -236,7 +236,9 @@
     <Compile Include="Web\PropertyEditors\VortoPropertyEditor.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
+    <None Include="packages.config">
+      <SubType>Designer</SubType>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <Content Include="Web\UI\App_Plugins\Vorto\css\vorto.css" />

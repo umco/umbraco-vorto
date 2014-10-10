@@ -62,6 +62,10 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 
 			[PreValueField("displayNativeNames", "Display Native Language Names", "boolean", Description = "Set whether to display language names in their native form.")]
 			public string DisplayNativeNames { get; set; }
+
+            [PreValueField("hideLabel", "Hide Label", "boolean",
+    Description = "Hide the Umbraco property title and description, making the Vorto span the entire page width")]
+            public bool HideLabel { get; set; }
 		}
 
 		#endregion

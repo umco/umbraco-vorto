@@ -152,7 +152,7 @@ angular.module("umbraco.directives").directive('vortoProperty',
                 var obj = {};
                 obj[scope.language] = newValue;
                 scope.$emit('languageValueChange', obj);
-            });
+            }, true);
         };
 
         return {

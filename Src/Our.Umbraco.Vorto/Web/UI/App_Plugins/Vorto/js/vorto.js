@@ -13,6 +13,8 @@
         $scope.currentLanguage = undefined;
         $scope.activeLanguage = undefined;
 
+        $scope.model.hideLabel = $scope.model.config.hideLabel == 1;
+
         $scope.property = {
             config: {},
             view: ""

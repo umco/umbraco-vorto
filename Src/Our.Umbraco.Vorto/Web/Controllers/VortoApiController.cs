@@ -39,10 +39,24 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			return FormatDataType(dtd);
 		}
 
-		public object GetDataTypeByAlias(string contentTypeAlias, string propertyAlias)
+		public object GetDataTypeByAlias(string contentType, string contentTypeAlias, string propertyAlias)
 		{
-			var contentType = Services.ContentTypeService.GetContentType(contentTypeAlias);
-			var prop = contentType.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
+            IContentTypeComposition ct = null;
+            
+		    switch (contentType)
+		    {
+		        case "content":
+                    ct = Services.ContentTypeService.GetContentType(contentTypeAlias);
+		            break;
+                case "media":
+                    ct = Services.ContentTypeService.GetMediaType(contentTypeAlias);
+		            break;
+		    }
+
+		    if (ct == null)
+		        return null;
+
+			var prop = ct.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
 			if (prop == null)
 				return null;
 
@@ -55,23 +69,28 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			if (dtd == null)
 				throw new HttpResponseException(HttpStatusCode.NotFound);
 
-			var dataTypeDisplay = Mapper.Map<IDataTypeDefinition, DataTypeDisplay>(dtd);
 			var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+
+			// Force converter before passing prevalues to view
+			var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
+			var convertedPreValues = propEditor.PreValueEditor.ConvertDbToEditor(propEditor.DefaultPreValues,
+				preValues);
 
 			return new
 			{
 				guid = dtd.Key,
 				propertyEditorAlias = dtd.PropertyEditorAlias,
-				preValues = dataTypeDisplay.PreValues,
+				preValues = convertedPreValues,
 				view = propEditor.ValueEditor.View
 			};
 		}
 
-		public IEnumerable<object> GetLanguages(int id, int parentId, Guid dtdguid)
+		public IEnumerable<object> GetLanguages(string section, int id, int parentId, Guid dtdguid)
 		{
 			var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdguid);
 			var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
 			var languageSource = preValues.ContainsKey("languageSource") ? preValues["languageSource"].Value : "";
+			var primaryLanguage = preValues.ContainsKey("primaryLanguage") ? preValues["primaryLanguage"].Value : "";
 
 			var languages = new List<Language>();
 
@@ -79,8 +98,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			{
 				var xpath = preValues.ContainsKey("xpath") ? preValues["xpath"].Value : "";
 
-				// Grab languages
-				if (!string.IsNullOrWhiteSpace(xpath))
+				// Grab languages by xpath (only if in content section)
+                if (!string.IsNullOrWhiteSpace(xpath) && section == "content")
 				{
 					xpath = xpath.Replace("$currentPage",
 						string.Format("//*[@id={0} and @isDoc]", id)).Replace("$parentPage",
@@ -149,6 +168,10 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			// See if one has already been set via the event handler
 			var activeLanguage = args.Languages.FirstOrDefault(x => x.IsDefault);
 
+			// Try setting to primary language
+			if (activeLanguage == null && !string.IsNullOrEmpty(primaryLanguage))
+				activeLanguage = args.Languages.FirstOrDefault(x => x.IsoCode == primaryLanguage);
+
 			// Try settings to exact match of current culture
 			if (activeLanguage == null)
 				activeLanguage = args.Languages.FirstOrDefault(x => x.IsoCode == currentCulture);
@@ -170,6 +193,22 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 
 			// Return results
 			return args.Languages;
+		}
+
+		public IEnumerable<object> GetInstalledLanguages()
+		{
+			var languages = new List<Language>();
+
+			languages.AddRange(umbraco.cms.businesslogic.language.Language.GetAllAsList()
+				.Select(x => CultureInfo.GetCultureInfo(x.CultureAlias))
+				.Select(x => new Language
+				{
+					IsoCode = x.Name,
+					Name = x.DisplayName,
+					NativeName = x.NativeName
+				}));
+
+			return languages;
 		}
 	}
 }

@@ -1,10 +1,13 @@
 ﻿angular.module("umbraco").controller("Our.Umbraco.PropertyEditors.Vorto.vortoEditor", [
     '$scope',
     '$rootScope',
+    'appState',
     'editorState',
     'umbPropEditorHelper',
     'Our.Umbraco.Resources.Vorto.vortoResources',
-    function ($scope, $rootScope, editorState, umbPropEditorHelper, vortoResources) {
+    function ($scope, $rootScope, appState, editorState, umbPropEditorHelper, vortoResources) {
+
+        var currentSection = appState.getSectionState("currentSection");
 
         $scope.languages = [];
         $scope.pinnedLanguages = [];
@@ -27,7 +30,7 @@
 
         $scope.setCurrentLanguage = function (language, dontBroadcast) {
             // If same as a pinned language, remove the pinned language
-            var pinned = _.find($scope.pinnedLanguages, function(itm) {
+            var pinned = _.find($scope.pinnedLanguages, function (itm) {
                 return itm.isoCode == language.isoCode;
             });
             if (pinned) {
@@ -61,14 +64,13 @@
             if ($scope.activeLanguage.isoCode == language.isoCode) {
                 $scope.activeLanguage = $scope.currentLanguage;
             }
-            $scope.pinnedLanguages = _.reject($scope.pinnedLanguages, function(itm) {
+            $scope.pinnedLanguages = _.reject($scope.pinnedLanguages, function (itm) {
                 return itm.isoCode == language.isoCode;
             });
         };
 
-        $scope.isPinnable = function (language)
-        {
-            return $scope.currentLanguage.isoCode != language.isoCode && !_.find($scope.pinnedLanguages, function(itm) {
+        $scope.isPinnable = function (language) {
+            return $scope.currentLanguage.isoCode != language.isoCode && !_.find($scope.pinnedLanguages, function (itm) {
                 return itm.isoCode == language.isoCode;
             });
         };
@@ -83,38 +85,90 @@
             $scope.setCurrentLanguage(language, true);
         });
 
+        $scope.$watch("model.value", function () {
+            validateProperty();
+        }, true);
+
+        var validateProperty = function ()
+        {
+            // Validate value changes
+            if ($scope.model.validation.mandatory) {
+
+                var mandatoryBehaviour = $scope.model.config.mandatoryBehaviour;
+                var primaryLanguage = $scope.model.config.primaryLanguage;
+
+                if (mandatoryBehaviour == "primary" && primaryLanguage == undefined) {
+                    mandatoryBehaviour = "ignore";
+                }
+
+                //TODO: Might be better if we could get the inner control to validate this?
+
+                var isValid = true;
+                switch (mandatoryBehaviour) {
+                    case "all":
+                        _.each($scope.languages, function (language) {
+                            if (!(language.isoCode in $scope.model.value.values) ||
+                                !$scope.model.value.values[language.isoCode]) {
+                                isValid = false;
+                                return;
+                            }
+                        });
+                        break;
+                    case "any":
+                        isValid = false;
+                        _.each($scope.languages, function (language) {
+                            if (language.isoCode in $scope.model.value.values &&
+                                $scope.model.value.values[language.isoCode]) {
+                                isValid = true;
+                                return;
+                            }
+                        });
+                        break;
+                    case "primary":
+                        if (primaryLanguage in $scope.model.value.values
+                            && $scope.model.value.values[primaryLanguage]) {
+                            isValid = true;
+                        } else {
+                            isValid = false;
+                        }
+                        break;
+                }
+
+                $scope.vortoForm.$setValidity("required", isValid);
+
+                // TODO: Regex
+            }
+        }
+
         // Load the datatype
         vortoResources.getDataTypeById($scope.model.config.dataType.guid).then(function (dataType) {
 
-            // Create the property config
-            var configObj = {};
-            _.each(dataType.preValues, function (p) {
-                configObj[p.key] = p.value;
-            });
-
             // Stash the config in scope for reuse
-            $scope.property.config = configObj;
+            $scope.property.config = dataType.preValues;
 
             // Get the view path
             $scope.property.viewPath = umbPropEditorHelper.getViewPath(dataType.view);
 
             // Get the current properties datatype
-            vortoResources.getDataTypeByAlias(editorState.current.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
+            vortoResources.getDataTypeByAlias(currentSection, editorState.current.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
 
                 $scope.model.value.dtdguid = dataType2.guid;
 
                 // Load the languages (this will trigger everything else to bind)
-                vortoResources.getLanguages(editorState.current.id, editorState.current.parentId, dataType2.guid)
+                vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType2.guid)
                     .then(function (languages) {
+
                         $scope.languages = languages;
-                        $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function(itm) {
+                        $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
                             return itm.isDefault;
                         });
+
+                        validateProperty();
                     });
             });
         });
 
-        
+
     }
 ]);
 
@@ -137,12 +191,25 @@ angular.module("umbraco").controller("Our.Umbraco.PreValueEditors.Vorto.property
     }]
 );
 
+angular.module("umbraco").controller("Our.Umbraco.PreValueEditors.Vorto.languagePicker", [
+    '$scope',
+    'Our.Umbraco.Resources.Vorto.vortoResources',
+    function ($scope, vortoResources) {
+
+        $scope.model.languages = [];
+
+        vortoResources.getInstalledLanguages().then(function (data) {
+            $scope.model.languages = data;
+        });
+
+    }]
+);
+
 /* Directives */
 angular.module("umbraco.directives").directive('vortoProperty',
     function ($compile, $http, umbPropEditorHelper, $timeout, $rootScope, $q) {
 
-        var link = function (scope, element, attrs, ctrl)
-        {
+        var link = function (scope, element, attrs, ctrl) {
             scope[ctrl.$name] = ctrl;
 
             scope.model = {};
@@ -173,24 +240,6 @@ angular.module("umbraco.directives").directive('vortoProperty',
         };
     });
 
-angular.module('umbraco.directives').directive('jsonText', function () {
-    return {
-        restrict: 'A',
-        require: 'ngModel',
-        link: function (scope, element, attr, ngModel) {
-            function into(input) {
-                return JSON.parse(input);
-            }
-            function out(data) {
-                return JSON.stringify(data);
-            }
-            ngModel.$parsers.push(into);
-            ngModel.$formatters.push(out);
-
-        }
-    };
-});
-
 /* Resources */
 angular.module('umbraco.resources').factory('Our.Umbraco.Resources.Vorto.vortoResources',
     function ($q, $http, umbRequestHelper) {
@@ -207,15 +256,21 @@ angular.module('umbraco.resources').factory('Our.Umbraco.Resources.Vorto.vortoRe
                     'Failed to retrieve datatype'
                 );
             },
-            getDataTypeByAlias: function (contentTypeAlias, propertyAlias) {
+            getDataTypeByAlias: function (contentType, contentTypeAlias, propertyAlias) {
                 return umbRequestHelper.resourcePromise(
-                    $http.get("/umbraco/backoffice/VortoApi/VortoApi/GetDataTypeByAlias?contentTypeAlias=" + contentTypeAlias + "&propertyAlias=" + propertyAlias),
+                    $http.get("/umbraco/backoffice/VortoApi/VortoApi/GetDataTypeByAlias?contentType=" + contentType + "&contentTypeAlias=" + contentTypeAlias + "&propertyAlias=" + propertyAlias),
                     'Failed to retrieve datatype'
                 );
             },
-            getLanguages: function (id, parentId, dtdguid) {
+            getLanguages: function (section, id, parentId, dtdguid) {
                 return umbRequestHelper.resourcePromise(
-                    $http.get("/umbraco/backoffice/VortoApi/VortoApi/GetLanguages?id=" + id + "&parentId=" + parentId + "&dtdguid=" + dtdguid),
+                    $http.get("/umbraco/backoffice/VortoApi/VortoApi/GetLanguages?section=" + section + "&id=" + id + "&parentId=" + parentId + "&dtdguid=" + dtdguid),
+                    'Failed to retrieve languages'
+                );
+            },
+            getInstalledLanguages: function () {
+                return umbRequestHelper.resourcePromise(
+                    $http.get("/umbraco/backoffice/VortoApi/VortoApi/GetInstalledLanguages"),
                     'Failed to retrieve languages'
                 );
             }
@@ -223,14 +278,14 @@ angular.module('umbraco.resources').factory('Our.Umbraco.Resources.Vorto.vortoRe
     }
 );
 
-$(function() {
+$(function () {
 
-    var over = function() {
+    var over = function () {
         var self = this;
         $(self).addClass("active").find(".vorto-menu").show();
     };
 
-    var out = function() {
+    var out = function () {
         var self = this;
         $(self).removeClass("active").find(".vorto-menu").hide();
     };
@@ -243,4 +298,22 @@ $(function() {
         selector: ".vorto-tabs__item--menu"
     });
 
+});
+
+angular.module('umbraco.directives').directive('jsonText', function () {
+    return {
+        restrict: 'A',
+        require: 'ngModel',
+        link: function (scope, element, attr, ngModel) {
+            function into(input) {
+                return JSON.parse(input);
+            }
+            function out(data) {
+                return JSON.stringify(data);
+            }
+            ngModel.$parsers.push(into);
+            ngModel.$formatters.push(out);
+
+        }
+    };
 });

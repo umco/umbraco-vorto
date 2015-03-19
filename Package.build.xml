@@ -22,7 +22,7 @@
 	****************************************
   -->
   <PropertyGroup>
-	  <PackageVersion>1.2</PackageVersion>
+	  <PackageVersion>1.5</PackageVersion>
     <BuildConfiguration>Debug</BuildConfiguration>
   </PropertyGroup>
 

@@ -87,7 +87,6 @@ namespace Our.Umbraco.Vorto.Extensions
 		}
 
 		public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null, bool recursive = false, T defaultValue = default(T))
-			where T : class 
 		{
 			if (cultureName == null)
 				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
@@ -149,7 +148,7 @@ namespace Our.Umbraco.Vorto.Extensions
 				
 				if (prop.Value is T)
 				{
-					return prop.Value as T;
+					return (T)prop.Value;
 				}
 				
 				return default(T);

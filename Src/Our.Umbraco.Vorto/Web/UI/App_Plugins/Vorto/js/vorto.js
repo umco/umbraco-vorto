@@ -15,6 +15,9 @@
 
         $scope.currentLanguage = undefined;
         $scope.activeLanguage = undefined;
+        $scope.sync = true;
+
+        //$.removeCookie('vortoPinnedLanguages');
 
         $scope.model.hideLabel = $scope.model.config.hideLabel == 1;
 
@@ -29,21 +32,19 @@
         };
 
         $scope.setCurrentLanguage = function (language, dontBroadcast) {
-            // If same as a pinned language, remove the pinned language
-            var pinned = _.find($scope.pinnedLanguages, function (itm) {
-                return itm.isoCode == language.isoCode;
-            });
-            if (pinned) {
-                $scope.unpinLanguage(pinned);
+    
+            if (!dontBroadcast && $scope.sync) {
+
+                // Update cookie
+                $.cookie('vortoCurrentLanguage', language.isoCode);
+                $.cookie('vortoActiveLanguage', language.isoCode);
+
+                // Broadcast a resync
+                $rootScope.$broadcast("reSync");
+
+            } else {
+                $scope.currentLanguage = $scope.activeLanguage = language;
             }
-
-            // Set current language
-            $scope.currentLanguage = $scope.activeLanguage = language;
-
-            // Broadcast
-            if (!dontBroadcast && $rootScope.vortoSyncAll) {
-                $rootScope.$broadcast("syncCurrentLanguage", language);
-            };
 
             // Close the menu (Not really the right way to do it :))
             $("#vorto-" + $scope.model.id)
@@ -52,21 +53,55 @@
                 .find(".vorto-menu").hide();
         };
 
-        $scope.setActiveLanguage = function (language) {
-            $scope.activeLanguage = language;
+        $scope.setActiveLanguage = function (language, dontBroadcast) {
+            if (!dontBroadcast && $scope.sync) {
+
+                // Update cookie
+                $.cookie('vortoActiveLanguage', language.isoCode);
+
+                // Broadcast a resync
+                $rootScope.$broadcast("reSync");
+
+            } else {
+                $scope.activeLanguage = language;
+            }
         };
 
         $scope.pinLanguage = function (language) {
-            $scope.pinnedLanguages.push(language);
+            if ($scope.sync) {
+
+                // Update cookie
+                var cookiePinnedLanguages = JSON.parse($.cookie('vortoPinnedLanguages') || "[]");
+                cookiePinnedLanguages.push(language.isoCode);
+                cookiePinnedLanguages = _.uniq(cookiePinnedLanguages);
+                $.cookie('vortoPinnedLanguages', JSON.stringify(cookiePinnedLanguages));
+
+                // Broadcast a resync
+                $rootScope.$broadcast("reSync");
+
+            } else {
+                $scope.pinnedLanguages.push(language);
+            }
         };
 
         $scope.unpinLanguage = function (language) {
-            if ($scope.activeLanguage.isoCode == language.isoCode) {
-                $scope.activeLanguage = $scope.currentLanguage;
+            if ($scope.sync) {
+
+                // Update cookie
+                var cookiePinnedLanguages = JSON.parse($.cookie('vortoPinnedLanguages') || "[]");
+                cookiePinnedLanguages = _.reject(cookiePinnedLanguages, function (itm) {
+                    return itm == language.isoCode;
+                });
+                $.cookie('vortoPinnedLanguages', JSON.stringify(cookiePinnedLanguages));
+
+                // Broadcast a resync
+                $rootScope.$broadcast("reSync");
+
+            } else {
+                $scope.pinnedLanguages = _.reject($scope.pinnedLanguages, function (itm) {
+                    return itm.isoCode == language.isoCode;
+                });
             }
-            $scope.pinnedLanguages = _.reject($scope.pinnedLanguages, function (itm) {
-                return itm.isoCode == language.isoCode;
-            });
         };
 
         $scope.isPinnable = function (language) {
@@ -81,13 +116,76 @@
                 delta);
         });
 
-        $scope.$on("syncCurrentLanguage", function (evt, language) {
-            $scope.setCurrentLanguage(language, true);
+        $scope.$on("reSync", function (evt) {
+            reSync();
+        });
+
+        $scope.$watchCollection("pinnedLanguages", function (pinnedLanguages) {
+
+            var activePinnedLanguage = _.find(pinnedLanguages, function (itm) {
+                return itm.isoCode == $scope.activeLanguage.isoCode;
+            });
+            if (!activePinnedLanguage) {
+                $scope.activeLanguage = $scope.currentLanguage;
+            }
+
+        });
+
+        $scope.$watch("currentLanguage", function (language) {
+
+            // If same as a pinned language, remove the pinned language
+            var pinned = _.find($scope.pinnedLanguages, function (itm) {
+                return itm.isoCode == language.isoCode;
+            });
+            if (pinned) {
+                $scope.unpinLanguage(pinned);
+            }
+
+        });
+
+        $scope.$watch("sync", function (shouldSync) {
+            if (shouldSync) {
+                reSync();
+            }
         });
 
         $scope.$watch("model.value", function () {
             validateProperty();
         }, true);
+
+        var reSync = function() {
+            if ($scope.sync) {
+
+                // Handle current language change
+                var cookieCurrentLanguage = $.cookie('vortoCurrentLanguage');
+                var currentLanguage = _.find($scope.languages, function(itm) {
+                    return itm.isoCode == cookieCurrentLanguage;
+                }) || $scope.currentLanguage;
+
+                if (!$scope.currentLanguage || $scope.currentLanguage.isoCode != currentLanguage) {
+                    $scope.setCurrentLanguage(currentLanguage, true);
+                }
+
+                // Handle active language change
+                var cookieActiveLanguage = $.cookie('vortoActiveLanguage');
+                var activeLanguage = _.find($scope.languages, function (itm) {
+                    return itm.isoCode == cookieActiveLanguage;
+                }) || $scope.activeLanguage;
+
+                if (!$scope.activeLanguage || $scope.activeLanguage.isoCode != activeLanguage) {
+                    $scope.setActiveLanguage(activeLanguage, true);
+                }
+
+                // Handle pinned language change
+                var cookiePinnedLanguages = JSON.parse($.cookie('vortoPinnedLanguages') || "[]");
+                var pinnedLanguages = _.filter($scope.languages, function (itm) {
+                    return _.contains(cookiePinnedLanguages, itm.isoCode);
+                });
+
+                $scope.pinnedLanguages = pinnedLanguages;
+                
+            }
+        }
 
         var validateProperty = function ()
         {
@@ -162,6 +260,8 @@
                         $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
                             return itm.isDefault;
                         });
+
+                        reSync();
 
                         validateProperty();
                     });

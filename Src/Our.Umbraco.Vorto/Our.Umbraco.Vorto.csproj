@@ -242,6 +242,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Web\UI\App_Plugins\Vorto\css\vorto.css" />
+    <Content Include="Web\UI\App_Plugins\Vorto\js\jquery.cookie.js" />
     <Content Include="Web\UI\App_Plugins\Vorto\js\jquery.hoverIntent.minified.js" />
     <Content Include="Web\UI\App_Plugins\Vorto\js\vorto.js" />
     <Content Include="Web\UI\App_Plugins\Vorto\views\vorto.languagePicker.html" />

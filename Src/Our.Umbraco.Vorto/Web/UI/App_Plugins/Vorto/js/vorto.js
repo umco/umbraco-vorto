@@ -15,9 +15,9 @@
 
         $scope.currentLanguage = undefined;
         $scope.activeLanguage = undefined;
-        $scope.sync = true;
 
-        //$.removeCookie('vortoPinnedLanguages');
+        var cookieUnsyncedProps = JSON.parse($.cookie('vortoUnsyncedProps') || "[]");
+        $scope.sync = !_.contains(cookieUnsyncedProps, $scope.model.id);
 
         $scope.model.hideLabel = $scope.model.config.hideLabel == 1;
 
@@ -144,8 +144,19 @@
         });
 
         $scope.$watch("sync", function (shouldSync) {
+            var tmp;
             if (shouldSync) {
+                tmp = JSON.parse($.cookie('vortoUnsyncedProps') || "[]");
+                tmp = _.reject(tmp, function (itm) {
+                    return itm == $scope.model.id;
+                });
+                $.cookie('vortoUnsyncedProps', JSON.stringify(tmp));
                 reSync();
+            } else {
+                tmp = JSON.parse($.cookie('vortoUnsyncedProps') || "[]");
+                tmp.push($scope.model.id);
+                tmp = _.uniq(tmp);
+                $.cookie('vortoUnsyncedProps', JSON.stringify(tmp));
             }
         });
 
@@ -382,12 +393,12 @@ $(function () {
 
     var over = function () {
         var self = this;
-        $(self).addClass("active").find(".vorto-menu").show();
+        $(self).addClass("active").find(".vorto-menu").show().css('z-index', 9000 );
     };
 
     var out = function () {
         var self = this;
-        $(self).removeClass("active").find(".vorto-menu").hide();
+        $(self).removeClass("active").find(".vorto-menu").hide().css('z-index', 0 );
     };
 
     $("body").hoverIntent({

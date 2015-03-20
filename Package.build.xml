@@ -22,7 +22,7 @@
 	****************************************
   -->
   <PropertyGroup>
-	  <PackageVersion>1.4</PackageVersion>
+	  <PackageVersion>1.4.1</PackageVersion>
     <BuildConfiguration>Debug</BuildConfiguration>
   </PropertyGroup>
 
@@ -53,12 +53,12 @@
           Encoding="ASCII"
           Files="$(ProjectDir)\Properties\AssemblyInfo.cs"
           Regex="AssemblyVersion\(&quot;.*&quot;\)\]"
-          ReplacementText="AssemblyVersion(&quot;$(PackageVersion).0.0&quot;)]" />
+          ReplacementText="AssemblyVersion(&quot;$(PackageVersion)&quot;)]" />
     <FileUpdate
           Encoding="ASCII"
           Files="$(ProjectDir)\Properties\AssemblyInfo.cs"
           Regex="AssemblyFileVersion\(&quot;.*&quot;\)\]"
-          ReplacementText="AssemblyFileVersion(&quot;$(PackageVersion).0.0&quot;)]" />
+          ReplacementText="AssemblyFileVersion(&quot;$(PackageVersion)&quot;)]" />
   </Target>
   
   <!-- COMPILE -->

@@ -37,14 +37,14 @@ namespace Our.Umbraco.Vorto.Extensions
 			return true;
 		}
 
-        public static bool HasVortoValue(this IPublishedContent content, string propertyAlias,
-            string cultureName = null, string fallbackCultureName = null, bool recursive = false)
-        {
-            var hasValue = content.HasVortoValue(propertyAlias, cultureName, recursive);
-            if (!hasValue && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
-                hasValue = content.HasVortoValue(propertyAlias, fallbackCultureName, recursive);
-            return hasValue;
-        }
+        //public static bool HasVortoValue(this IPublishedContent content, string propertyAlias,
+        //    string cultureName = null, string fallbackCultureName = null, bool recursive = false)
+        //{
+        //    var hasValue = content.HasVortoValue(propertyAlias, cultureName, recursive);
+        //    if (!hasValue && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
+        //        hasValue = content.HasVortoValue(propertyAlias, fallbackCultureName, recursive);
+        //    return hasValue;
+        //}
 
 		#endregion
 
@@ -95,15 +95,15 @@ namespace Our.Umbraco.Vorto.Extensions
 			return content.GetVortoValue<object>(propertyAlias, cultureName, recursive, defaultValue);
 		}
 
-        public static object GetVortoValue(this IPublishedContent content, string propertyAlias, string cultureName = null, 
-            string fallbackCultureName = null, bool recursive = false, object defaultValue = null)
-        {
-            var result = content.GetVortoValue(propertyAlias, cultureName, recursive);
-            if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
-                result = content.GetVortoValue(propertyAlias, fallbackCultureName, recursive, defaultValue);
+        //public static object GetVortoValue(this IPublishedContent content, string propertyAlias, string cultureName = null, 
+        //    string fallbackCultureName = null, bool recursive = false, object defaultValue = null)
+        //{
+        //    var result = content.GetVortoValue(propertyAlias, cultureName, recursive);
+        //    if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
+        //        result = content.GetVortoValue(propertyAlias, fallbackCultureName, recursive, defaultValue);
 
-            return result;
-        }
+        //    return result;
+        //}
 
 		public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null, 
             bool recursive = false, T defaultValue = default(T))
@@ -178,15 +178,15 @@ namespace Our.Umbraco.Vorto.Extensions
 		}
 
 
-	    public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
-            string fallbackCultureName = null, bool recursive = false, T defaultValue = default(T))
-	    {
-            var result = content.GetVortoValue<T>(propertyAlias, cultureName, recursive);
-            if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
-                result = content.GetVortoValue<T>(propertyAlias, fallbackCultureName, recursive, defaultValue);
+        //public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
+        //    string fallbackCultureName = null, bool recursive = false, T defaultValue = default(T))
+        //{
+        //    var result = content.GetVortoValue<T>(propertyAlias, cultureName, recursive);
+        //    if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
+        //        result = content.GetVortoValue<T>(propertyAlias, fallbackCultureName, recursive, defaultValue);
 
-            return result;
-	    }
+        //    return result;
+        //}
 
 	    #endregion
 

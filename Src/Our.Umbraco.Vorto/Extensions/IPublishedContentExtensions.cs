@@ -133,7 +133,7 @@ namespace Our.Umbraco.Vorto.Extensions
 					// just ignoring these when looking up converters.
 					// NB: IPropertyEditorValueConverter not to be confused with
 					// IPropertyValueConverter which are the ones most people are creating
-					var properyType = CreateDummyPropertyType(targetDataType.Id, targetDataType.PropertyEditorAlias);
+                    var properyType = CreateDummyPropertyType(targetDataType.Id, targetDataType.PropertyEditorAlias, content.ContentType);
 					var converters = PropertyValueConvertersResolver.Current.Converters.ToArray();
 
 					// In umbraco, there are default value converters that try to convert the 
@@ -190,9 +190,9 @@ namespace Our.Umbraco.Vorto.Extensions
 
 	    #endregion
 
-		private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias)
+		private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias, PublishedContentType contentType)
 		{
-			return new PublishedPropertyType(null,
+            return new PublishedPropertyType(contentType,
 				new PropertyType(new DataTypeDefinition(-1, propertyEditorAlias)
 				{
 					Id = dataTypeId

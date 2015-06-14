@@ -1,11 +1,12 @@
 ﻿angular.module("umbraco").controller("Our.Umbraco.PropertyEditors.Vorto.vortoEditor", [
     '$scope',
+    '$cookies',
     '$rootScope',
     'appState',
     'editorState',
     'umbPropEditorHelper',
     'Our.Umbraco.Resources.Vorto.vortoResources',
-    function ($scope, $rootScope, appState, editorState, umbPropEditorHelper, vortoResources) {
+    function ($scope, $cookies, $rootScope, appState, editorState, umbPropEditorHelper, vortoResources) {
 
         var currentSection = appState.getSectionState("currentSection");
 
@@ -16,7 +17,7 @@
         $scope.currentLanguage = undefined;
         $scope.activeLanguage = undefined;
 
-        var cookieUnsyncedProps = JSON.parse($.cookie('vortoUnsyncedProps') || "[]");
+        var cookieUnsyncedProps = JSON.parse($cookies['vortoUnsyncedProps'] || "[]");
         $scope.sync = !_.contains(cookieUnsyncedProps, $scope.model.id);
 
         $scope.model.hideLabel = $scope.model.config.hideLabel == 1;
@@ -32,12 +33,14 @@
         };
 
         $scope.setCurrentLanguage = function (language, dontBroadcast) {
-    
+
+            //console.log("cl = ",  language);
+
             if (!dontBroadcast && $scope.sync) {
 
                 // Update cookie
-                $.cookie('vortoCurrentLanguage', language.isoCode);
-                $.cookie('vortoActiveLanguage', language.isoCode);
+                $cookies['vortoCurrentLanguage'] = language.isoCode;
+                $cookies['vortoActiveLanguage'] = language.isoCode;
 
                 // Broadcast a resync
                 $rootScope.$broadcast("reSync");
@@ -54,10 +57,11 @@
         };
 
         $scope.setActiveLanguage = function (language, dontBroadcast) {
+
             if (!dontBroadcast && $scope.sync) {
 
                 // Update cookie
-                $.cookie('vortoActiveLanguage', language.isoCode);
+                $cookies['vortoActiveLanguage'] = language.isoCode;
 
                 // Broadcast a resync
                 $rootScope.$broadcast("reSync");
@@ -71,10 +75,10 @@
             if ($scope.sync) {
 
                 // Update cookie
-                var cookiePinnedLanguages = JSON.parse($.cookie('vortoPinnedLanguages') || "[]");
+                var cookiePinnedLanguages = JSON.parse($cookies['vortoPinnedLanguages'] || "[]");
                 cookiePinnedLanguages.push(language.isoCode);
                 cookiePinnedLanguages = _.uniq(cookiePinnedLanguages);
-                $.cookie('vortoPinnedLanguages', JSON.stringify(cookiePinnedLanguages));
+                $cookies['vortoPinnedLanguages'] = JSON.stringify(cookiePinnedLanguages);
 
                 // Broadcast a resync
                 $rootScope.$broadcast("reSync");
@@ -88,11 +92,11 @@
             if ($scope.sync) {
 
                 // Update cookie
-                var cookiePinnedLanguages = JSON.parse($.cookie('vortoPinnedLanguages') || "[]");
+                var cookiePinnedLanguages = JSON.parse($cookies['vortoPinnedLanguages'] || "[]");
                 cookiePinnedLanguages = _.reject(cookiePinnedLanguages, function (itm) {
                     return itm == language.isoCode;
                 });
-                $.cookie('vortoPinnedLanguages', JSON.stringify(cookiePinnedLanguages));
+                $cookies['vortoPinnedLanguages'] = JSON.stringify(cookiePinnedLanguages);
 
                 // Broadcast a resync
                 $rootScope.$broadcast("reSync");
@@ -146,17 +150,17 @@
         $scope.$watch("sync", function (shouldSync) {
             var tmp;
             if (shouldSync) {
-                tmp = JSON.parse($.cookie('vortoUnsyncedProps') || "[]");
+                tmp = JSON.parse($cookies['vortoUnsyncedProps'] || "[]");
                 tmp = _.reject(tmp, function (itm) {
                     return itm == $scope.model.id;
                 });
-                $.cookie('vortoUnsyncedProps', JSON.stringify(tmp));
+                $cookies['vortoUnsyncedProps'] = JSON.stringify(tmp);
                 reSync();
             } else {
-                tmp = JSON.parse($.cookie('vortoUnsyncedProps') || "[]");
+                tmp = JSON.parse($cookies['vortoUnsyncedProps'] || "[]");
                 tmp.push($scope.model.id);
                 tmp = _.uniq(tmp);
-                $.cookie('vortoUnsyncedProps', JSON.stringify(tmp));
+                $cookies['vortoUnsyncedProps'] = JSON.stringify(tmp);
             }
         });
 
@@ -164,12 +168,12 @@
             validateProperty();
         }, true);
 
-        var reSync = function() {
+        var reSync = function () {
             if ($scope.sync) {
 
                 // Handle current language change
-                var cookieCurrentLanguage = $.cookie('vortoCurrentLanguage');
-                var currentLanguage = _.find($scope.languages, function(itm) {
+                var cookieCurrentLanguage = $cookies['vortoCurrentLanguage'];
+                var currentLanguage = _.find($scope.languages, function (itm) {
                     return itm.isoCode == cookieCurrentLanguage;
                 }) || $scope.currentLanguage;
 
@@ -178,7 +182,7 @@
                 }
 
                 // Handle active language change
-                var cookieActiveLanguage = $.cookie('vortoActiveLanguage');
+                var cookieActiveLanguage = $cookies['vortoActiveLanguage'];
                 var activeLanguage = _.find($scope.languages, function (itm) {
                     return itm.isoCode == cookieActiveLanguage;
                 }) || $scope.activeLanguage;
@@ -188,18 +192,17 @@
                 }
 
                 // Handle pinned language change
-                var cookiePinnedLanguages = JSON.parse($.cookie('vortoPinnedLanguages') || "[]");
+                var cookiePinnedLanguages = JSON.parse($cookies['vortoPinnedLanguages'] || "[]");
                 var pinnedLanguages = _.filter($scope.languages, function (itm) {
                     return _.contains(cookiePinnedLanguages, itm.isoCode);
                 });
 
                 $scope.pinnedLanguages = pinnedLanguages;
-                
+
             }
         }
 
-        var validateProperty = function ()
-        {
+        var validateProperty = function () {
             // Validate value changes
             if ($scope.model.validation.mandatory) {
 
@@ -393,12 +396,12 @@ $(function () {
 
     var over = function () {
         var self = this;
-        $(self).addClass("active").find(".vorto-menu").show().css('z-index', 9000 );
+        $(self).addClass("active").find(".vorto-menu").show().css('z-index', 9000);
     };
 
     var out = function () {
         var self = this;
-        $(self).removeClass("active").find(".vorto-menu").hide().css('z-index', 0 );
+        $(self).removeClass("active").find(".vorto-menu").hide().css('z-index', 0);
     };
 
     $("body").hoverIntent({

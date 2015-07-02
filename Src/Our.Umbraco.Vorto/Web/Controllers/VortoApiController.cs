@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -120,7 +120,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 							{
 								IsoCode = x.Name,
 								Name = x.DisplayName,
-								NativeName = x.NativeName
+								NativeName = x.NativeName,
+                                				IsRightToLeft = x.TextInfo.IsRightToLeft
 							}));
 					}
 				}
@@ -136,7 +137,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 							{
 								IsoCode = x.Name,
 								Name = x.DisplayName,
-								NativeName = x.NativeName
+                                				NativeName = x.NativeName,
+                                				IsRightToLeft = x.TextInfo.IsRightToLeft
 							}));
 				}
 			}
@@ -148,7 +150,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 					{
 						IsoCode = x.Name,
 						Name = x.DisplayName,
-						NativeName = x.NativeName
+                        			NativeName = x.NativeName,
+                        			IsRightToLeft = x.TextInfo.IsRightToLeft
 					}));
 			}
 
@@ -205,7 +208,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 				{
 					IsoCode = x.Name,
 					Name = x.DisplayName,
-					NativeName = x.NativeName
+                    			NativeName = x.NativeName,
+                    			IsRightToLeft = x.TextInfo.IsRightToLeft
 				}));
 
 			return languages;

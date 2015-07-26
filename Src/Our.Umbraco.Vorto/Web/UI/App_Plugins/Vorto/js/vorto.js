@@ -31,6 +31,30 @@
             dtdguid: 0
         };
 
+		// find in parent scope NestedContent content editor and return the relative Content type alias
+        $scope.findNestedContentParent = function (parent) {
+            if (typeof parent.$parent == "undefined" || parent.$parent == null)
+            {
+                return null;
+            }
+            else {
+                if (typeof parent.model != "undefined" && typeof parent.model.editor != "undefined" && parent.model.editor == "Our.Umbraco.NestedContent") {
+                    if (typeof parent.model.value != "undefined" && parent.model.value != null &&
+                        typeof parent.model.value[0] != "undefined" && parent.model.value[0] != null && 
+                        typeof parent.model.value[0].ncContentTypeAlias != "undefined" )
+                    {
+                        return parent.model.value[0].ncContentTypeAlias;
+                    }
+                    else {
+                        return null;
+                    }
+                }
+                else {
+                    return $scope.findNestedContentParent(parent.$parent);
+                }
+            }
+        }
+		
         $scope.setCurrentLanguage = function (language, dontBroadcast) {
     
             if (!dontBroadcast && $scope.sync) {
@@ -258,8 +282,15 @@
             // Get the view path
             $scope.property.viewPath = umbPropEditorHelper.getViewPath(dataType.view);
 
+			// check if field is part of NEwstedContent data type
+            var documentTypeAlias = $scope.findNestedContentParent($scope.$parent);
+            if (documentTypeAlias == null)
+            {
+                documentTypeAlias = editorState.current.contentTypeAlias;
+            }
+			
             // Get the current properties datatype
-            vortoResources.getDataTypeByAlias(currentSection, editorState.current.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
+            vortoResources.getDataTypeByAlias(currentSection, documentTypeAlias, $scope.model.alias).then(function (dataType2) {
 
                 $scope.model.value.dtdguid = dataType2.guid;
 

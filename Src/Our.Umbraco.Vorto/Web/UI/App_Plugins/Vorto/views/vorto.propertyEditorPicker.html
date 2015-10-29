@@ -3,7 +3,7 @@
     <select name="dropDownList"
             class="umb-editor umb-dropdown"
             ng-model="model.value"
-            ng-options="i.name for i in model.dataTypes track by i.guid">
+            ng-options="i.name for i in model.dataTypes | orderBy:'name' track by i.guid">
     </select>
 
 </div>

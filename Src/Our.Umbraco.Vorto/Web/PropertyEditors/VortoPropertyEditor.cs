@@ -19,7 +19,6 @@ using Umbraco.Web.PropertyEditors;
 
 namespace Our.Umbraco.Vorto.Web.PropertyEditors
 {
-    [PropertyEditorAsset(ClientDependencyType.Javascript, "/App_Plugins/Vorto/js/jquery.cookie.js", Priority = 1)]
     [PropertyEditorAsset(ClientDependencyType.Javascript, "/App_Plugins/Vorto/js/jquery.hoverIntent.minified.js", Priority = 1)]
 	[PropertyEditorAsset(ClientDependencyType.Javascript, "/App_Plugins/Vorto/js/vorto.js", Priority = 2)]
 	[PropertyEditorAsset(ClientDependencyType.Css, "/App_Plugins/Vorto/css/vorto.css", Priority = 2)]

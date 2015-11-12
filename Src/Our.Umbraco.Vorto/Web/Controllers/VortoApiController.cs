@@ -14,6 +14,7 @@ using Umbraco.Web.Editors;
 using Umbraco.Web.Models.ContentEditing;
 using Umbraco.Web.Mvc;
 using Language = Our.Umbraco.Vorto.Models.Language;
+using Newtonsoft.Json.Linq;
 
 namespace Our.Umbraco.Vorto.Web.Controllers
 {
@@ -57,8 +58,19 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 		        return null;
 
 			var prop = ct.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
-			if (prop == null)
-				return null;
+            if (prop == null)
+            {
+                var nestedContentProperties = ct.CompositionPropertyTypes
+                    .Where(x => x.PropertyEditorAlias == "Our.Umbraco.NestedContent");
+
+                if (nestedContentProperties.Any())
+                {
+                    prop = SearchForPropertyInNestedContents(nestedContentProperties, propertyAlias);
+                }
+            }
+
+            if (prop == null)
+                return null;
 
 			var dtd = Services.DataTypeService.GetDataTypeDefinitionById(prop.DataTypeDefinitionId);
 			return FormatDataType(dtd);
@@ -210,5 +222,30 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 
 			return languages;
 		}
-	}
+
+        private PropertyType SearchForPropertyInNestedContents(IEnumerable<PropertyType> nestedContentProperties, string propertyAlias)
+        {
+            foreach (var nestedContentProperty in nestedContentProperties)
+            {
+                var preValues = Services.DataTypeService
+                    .GetPreValuesByDataTypeId(nestedContentProperty.DataTypeDefinitionId);
+                var docTypesConfigAsJson = preValues.First(x => x.Contains("ncAlias"));
+                dynamic configuredDoctypes = JArray.Parse(docTypesConfigAsJson);
+
+                foreach (var configuredDocType in configuredDoctypes)
+                {
+                    IContentType contentType = Services.ContentTypeService.GetContentType(configuredDocType.ncAlias.Value);
+                    var foundProperty = contentType.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
+
+                    if (foundProperty != null)
+                    {
+                        return foundProperty;
+                    }
+                }
+            }
+
+            return null;
+        }
+
+    }
 }

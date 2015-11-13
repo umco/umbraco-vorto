@@ -17,10 +17,10 @@ namespace Our.Umbraco.Vorto.Extensions
 		#region HasValue
 
 		private static bool DoHasVortoValue(this IPublishedContent content, string propertyAlias,
-            string cultureName = null, bool recursive = false)
+            string cultureOrLanguage = null, bool recursive = false)
 		{
-			if (cultureName == null)
-				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
+			if (cultureOrLanguage == null)
+				cultureOrLanguage = Thread.CurrentThread.CurrentUICulture.Name;
 
 			if (!content.HasValue(propertyAlias, recursive))
 				return false;
@@ -29,8 +29,10 @@ namespace Our.Umbraco.Vorto.Extensions
 			if (prop.Value is VortoValue)
 			{
 				var vortoModel = prop.Value as VortoValue;
-				if (!vortoModel.Values.ContainsKey(cultureName) || vortoModel.Values[cultureName] == null
-					|| vortoModel.Values[cultureName].ToString().IsNullOrWhiteSpace())
+                cultureOrLanguage = ValidateVortoCultureOrLanguage(cultureOrLanguage, vortoModel);
+
+                if (!vortoModel.Values.ContainsKey(cultureOrLanguage) || vortoModel.Values[cultureOrLanguage] == null
+					|| vortoModel.Values[cultureOrLanguage].ToString().IsNullOrWhiteSpace())
 						return false;
 			}
 
@@ -38,10 +40,10 @@ namespace Our.Umbraco.Vorto.Extensions
 		}
 
         public static bool HasVortoValue(this IPublishedContent content, string propertyAlias,
-            string cultureName = null, bool recursive = false, string fallbackCultureName = null)
+            string cultureOrLanguage = null, bool recursive = false, string fallbackCultureName = null)
         {
-            var hasValue = content.DoHasVortoValue(propertyAlias, cultureName, recursive);
-            if (!hasValue && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
+            var hasValue = content.DoHasVortoValue(propertyAlias, cultureOrLanguage, recursive);
+            if (!hasValue && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureOrLanguage))
                 hasValue = content.DoHasVortoValue(propertyAlias, fallbackCultureName, recursive);
             return hasValue;
         }
@@ -89,36 +91,38 @@ namespace Our.Umbraco.Vorto.Extensions
 
 		#region GetValue
 
-		private static object DoGetVortoValue(this IPublishedContent content, string propertyAlias, string cultureName = null,
+		private static object DoGetVortoValue(this IPublishedContent content, string propertyAlias, string cultureOrLanguage = null,
 			bool recursive = false, object defaultValue = null)
 		{
-			return content.GetVortoValue<object>(propertyAlias, cultureName, recursive, defaultValue);
+			return content.GetVortoValue<object>(propertyAlias, cultureOrLanguage, recursive, defaultValue);
 		}
 
-        public static object GetVortoValue(this IPublishedContent content, string propertyAlias, string cultureName = null,
+        public static object GetVortoValue(this IPublishedContent content, string propertyAlias, string cultureOrLanguage = null,
             bool recursive = false, object defaultValue = null, string fallbackCultureName = null)
         {
-            var result = content.DoGetVortoValue(propertyAlias, cultureName, recursive);
-            if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
+            var result = content.DoGetVortoValue(propertyAlias, cultureOrLanguage, recursive);
+            if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureOrLanguage))
                 result = content.DoGetVortoValue(propertyAlias, fallbackCultureName, recursive, defaultValue);
 
             return result;
         }
 
-		private static T DoGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null, 
+		private static T DoGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureOrLanguage = null, 
             bool recursive = false, T defaultValue = default(T))
 		{
-			if (cultureName == null)
-				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
+			if (cultureOrLanguage == null)
+				cultureOrLanguage = Thread.CurrentThread.CurrentUICulture.Name;
 
-			if (content.HasVortoValue(propertyAlias, cultureName, recursive))
+			if (content.HasVortoValue(propertyAlias, cultureOrLanguage, recursive))
 			{
 				var prop = content.GetProperty(propertyAlias, recursive);
 				if (prop.Value is VortoValue)
 				{
 					// Get the serialized value
 					var vortoModel = prop.Value as VortoValue;
-					var value = vortoModel.Values[cultureName];
+                    cultureOrLanguage = ValidateVortoCultureOrLanguage(cultureOrLanguage, vortoModel);
+
+					var value = vortoModel.Values[cultureOrLanguage];
 
 					// If the value is of type T, just return it
 					//if (value is T)
@@ -178,17 +182,28 @@ namespace Our.Umbraco.Vorto.Extensions
 		}
 
 
-        public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
+        public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureOrLanguage = null,
             bool recursive = false, T defaultValue = default(T), string fallbackCultureName = null)
         {
-            var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive);
-            if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
+            var result = content.DoGetVortoValue<T>(propertyAlias, cultureOrLanguage, recursive);
+            if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureOrLanguage))
                 result = content.DoGetVortoValue<T>(propertyAlias, fallbackCultureName, recursive, defaultValue);
 
             return result;
         }
 
 	    #endregion
+
+        private static string ValidateVortoCultureOrLanguage(string cultureOrLanguage, VortoValue vortoModel)
+        {
+            if (cultureOrLanguage.Length == 2)
+            {
+                cultureOrLanguage = vortoModel.Values.Keys
+                    .SingleOrDefault(x => x.Substring(0, 2).Equals(cultureOrLanguage, StringComparison.InvariantCultureIgnoreCase)) ?? string.Empty;
+            }
+
+            return cultureOrLanguage;
+        }
 
 		private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias, PublishedContentType contentType)
 		{

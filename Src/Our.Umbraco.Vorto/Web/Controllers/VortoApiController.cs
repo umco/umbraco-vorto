@@ -57,8 +57,13 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 		        return null;
 
 			var prop = ct.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
-			if (prop == null)
-				return null;
+            if (prop == null)
+            {
+                prop = SearchForPropertyInAllDocumentTypes(propertyAlias);
+            }
+
+            if (prop == null)
+                return null;
 
 			var dtd = Services.DataTypeService.GetDataTypeDefinitionById(prop.DataTypeDefinitionId);
 			return FormatDataType(dtd);
@@ -210,5 +215,25 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 
 			return languages;
 		}
-	}
+
+        private PropertyType SearchForPropertyInAllDocumentTypes(string propertyAlias)
+        {
+            var documentTypes = Services.ContentTypeService.GetAllContentTypes();
+
+            foreach (var documentType in documentTypes)
+            {
+                var potentialProperty = documentType.PropertyTypes
+                    .SingleOrDefault(x => x.Alias.Equals(propertyAlias));
+
+                if (potentialProperty != null &&
+                    potentialProperty.PropertyEditorAlias.Equals("Our.Umbraco.Vorto"))
+                {
+                    return potentialProperty;
+                }
+            }
+
+            return null;
+        }
+
+    }
 }

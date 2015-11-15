@@ -14,12 +14,23 @@ using Umbraco.Web.Editors;
 using Umbraco.Web.Models.ContentEditing;
 using Umbraco.Web.Mvc;
 using Language = Our.Umbraco.Vorto.Models.Language;
+using System.Runtime.Caching;
 
 namespace Our.Umbraco.Vorto.Web.Controllers
 {
 	[PluginController("VortoApi")]
 	public class VortoApiController : UmbracoAuthorizedJsonController
 	{
+
+        private const string VortoPropertiesCacheKey = "VortoProperties";
+        private const int VortoPropertiesExpirationMinutes = 30;
+        private readonly MemoryCache memoryCache;
+
+        public VortoApiController()
+        {
+            memoryCache = MemoryCache.Default;
+        }
+
 		public IEnumerable<object> GetNonVortoDataTypes()
 		{
 			return Services.DataTypeService.GetAllDataTypeDefinitions()
@@ -57,9 +68,14 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 		        return null;
 
 			var prop = ct.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
-            if (prop == null)
+            if (prop == null && contentType == "content")
             {
-                prop = SearchForPropertyInAllDocumentTypes(propertyAlias);
+                prop = GetContentPropertyFromCache(propertyAlias);
+                if (prop ==  null)
+                {
+                    prop = SearchForPropertyInAllDocumentTypes(propertyAlias);
+                    AddContentPropertyToCache(prop);
+                }
             }
 
             if (prop == null)
@@ -233,6 +249,42 @@ namespace Our.Umbraco.Vorto.Web.Controllers
             }
 
             return null;
+        }
+
+        private PropertyType GetContentPropertyFromCache(string propertyAlias)
+        {
+            var vortoProperties = (Dictionary<string, PropertyType>)memoryCache.Get(VortoPropertiesCacheKey);
+            if (vortoProperties == null)
+            {
+                return null;
+            }
+
+            PropertyType cachedProperty;
+            vortoProperties.TryGetValue(propertyAlias, out cachedProperty);
+            return cachedProperty;
+        }
+
+        private void AddContentPropertyToCache(PropertyType property)
+        {
+            Dictionary<string, PropertyType> vortoProperties;
+            if (!memoryCache.Contains(VortoPropertiesCacheKey))
+            {
+                vortoProperties = new Dictionary<string, PropertyType>();
+                var expirationPolicy = new CacheItemPolicy
+                {
+                    SlidingExpiration = TimeSpan.FromMinutes(VortoPropertiesExpirationMinutes)
+                };
+                memoryCache.Add(VortoPropertiesCacheKey, vortoProperties, expirationPolicy);
+            }
+            else
+            {
+                vortoProperties = (Dictionary<string, PropertyType>)memoryCache.Get(VortoPropertiesCacheKey);
+            }
+
+            if (!vortoProperties.ContainsKey(property.Alias))
+            {
+                vortoProperties.Add(property.Alias, property);
+            }
         }
 
     }

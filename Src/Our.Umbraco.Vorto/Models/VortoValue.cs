@@ -4,8 +4,12 @@ using Newtonsoft.Json;
 
 namespace Our.Umbraco.Vorto.Models
 {
-	internal class VortoValue
+	public class VortoValue
 	{
+        internal VortoValue()
+        {
+        }
+
 		[JsonProperty("values")]
 		public IDictionary<string, object> Values { get; set; }
 

@@ -222,6 +222,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="Extensions\VortoValueExtensions.cs" />
     <Compile Include="Helpers\VortoHelper.cs" />
     <Compile Include="Models\DataTypeInfo.cs" />
     <Compile Include="Converters\VortoValueConverter.cs" />

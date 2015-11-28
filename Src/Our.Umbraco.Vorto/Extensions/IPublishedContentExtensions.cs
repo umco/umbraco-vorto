@@ -143,25 +143,37 @@ namespace Our.Umbraco.Vorto.Extensions
 					// rather than just finding the most appropreate. If the ability to filter
 					// out default value converters becomes public, the following logic could
 					// and probably should be changed.
-					foreach (var converter in converters.Where(x => x.IsConverter(properyType)))
-					{
-						// Convert the type using a found value converter
-						var value2 = converter.ConvertDataToSource(properyType, value, false);
+                    foreach (var converter in converters.Where(x => x.IsConverter(properyType)))
+                    {
+                        // Convert the type using a found value converter
+                        var value2 = converter.ConvertDataToSource(properyType, value, false);
 
-						// If the value is of type T, just return it
-						if (value2 is T)
-							return (T)value2;
+                        // If the value is of type T, just return it
+                        if (value2 is T)
+                            return (T)value2;
 
-						// Value is not final value type, so try a regular type conversion aswell
-						var convertAttempt = value2.TryConvertTo<T>();
-						if (convertAttempt.Success)
-							return convertAttempt.Result;
-					}
+                        // Value is not final value type, so try a regular type conversion aswell
+                        var convertAttempt = value2.TryConvertTo<T>();
+                        if (convertAttempt.Success)
+                            return convertAttempt.Result;
 
-					// Value is not final value type, so try a regular type conversion
-					var convertAttempt2 = value.TryConvertTo<T>();
-					if (convertAttempt2.Success)
-						return convertAttempt2.Result;
+                        // If ConvertDataToSource failed try ConvertSourceToObject.
+                        var value3 = converter.ConvertSourceToObject(properyType, value, false);
+
+                        // If the value is of type T, just return it
+                        if (value3 is T)
+                            return (T)value3;
+
+                        // Value is not final value type, so try a regular type conversion aswell
+                        var convertAttempt2 = value3.TryConvertTo<T>();
+                        if (convertAttempt2.Success)
+                            return convertAttempt2.Result;
+                    }
+
+                    // Value is not final value type, so try a regular type conversion
+                    var convertAttempt3 = value.TryConvertTo<T>();
+                    if (convertAttempt3.Success)
+                        return convertAttempt3.Result;
 
 					return default(T);
 				}

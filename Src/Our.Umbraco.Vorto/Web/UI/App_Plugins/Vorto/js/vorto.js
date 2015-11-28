@@ -10,6 +10,20 @@
 
         var currentSection = appState.getSectionState("currentSection");
 
+        // Get node context
+        // DTGE/NC expose the context on the scope
+        // to avoid overwriting the editorState
+        // so check for a context on the scope first
+        var parentScope = $scope;
+        var nodeContext = undefined;
+        while (!nodeContext && parentScope.$id !== $rootScope.$id) {
+            parentScope = parentScope.$parent;
+            nodeContext = parentScope.nodeContext;
+        }
+        if (!nodeContext) {
+            nodeContext = editorState.current;
+        }
+
         $scope.languages = [];
         $scope.pinnedLanguages = [];
         $scope.$rootScope = $rootScope;
@@ -262,7 +276,7 @@
             $scope.property.viewPath = umbPropEditorHelper.getViewPath(dataType.view);
 
             // Get the current properties datatype
-            vortoResources.getDataTypeByAlias(currentSection, editorState.current.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
+            vortoResources.getDataTypeByAlias(currentSection, nodeContext.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
 
                 $scope.model.value.dtdguid = dataType2.guid;
 

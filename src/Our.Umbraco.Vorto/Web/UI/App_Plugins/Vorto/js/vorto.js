@@ -190,7 +190,7 @@
                 // Strip out empty entries
                 var cleanValue = {};
                 _.each($scope.languages, function(language) {
-                    if ($scope.model.value.values[language.isoCode] && $scope.model.value.values[language.isoCode].length > 0) {
+                    if ($scope.model.value.values[language.isoCode] && JSON.stringify($scope.model.value.values[language.isoCode]).length > 0) {
                         cleanValue[language.isoCode] = $scope.model.value.values[language.isoCode];
                     }
                 });
@@ -373,7 +373,7 @@ angular.module("umbraco.directives").directive('vortoProperty',
 
             scope.model = {};
             scope.model.config = scope.config;
-            scope.model.alias = "vorto-" + scope.language + "-" + scope.propertyAlias;
+            scope.model.alias = scope.propertyAlias + "." + scope.language;
             scope.model.value = scope.value.values[scope.language];
 
             var unsubscribe = scope.$on("vortoSyncLanguageValue", function (ev, args) {

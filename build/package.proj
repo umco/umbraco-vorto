@@ -25,7 +25,7 @@
   -->
   <!-- SHARED PROPERTIES -->
   <PropertyGroup>
-    <ProjectName>Our.Umbraco.Vorto</ProjectName>
+    <ProjectName>Our.Umbraco.Vorto</ProjectName> 
     <PackageName>Vorto</PackageName>
     <MinUmbracoVersion>7.1.4</MinUmbracoVersion>
     <Readme>Vorto - 1:1 multilingual property editor wrapper for Umbraco</Readme>

@@ -22,7 +22,7 @@ deploy:
       secure: gHDTL46KZcLzj6J8m//TJgaCOJCl9ixR//rXjO18HRlCsfPYYz7dU81u2D5zd+ZN
     artifact: /.*\.nupkg/
     on:
-      branch: master
+      branch: develop
 
      # GitHub Deployment for releases
   - provider: GitHub

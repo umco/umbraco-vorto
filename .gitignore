@@ -39,6 +39,7 @@ bin/
 */log.txt
 *.DS_Store
 
+artifacts/
 packages/
 TEMP/
 Logs/

@@ -1,6 +1,8 @@
 Vorto
 =====
 
+[![Join the chat at https://gitter.im/mattbrailsford/umbraco-vorto](https://badges.gitter.im/Join%20Chat.svg)](https://gitter.im/mattbrailsford/umbraco-vorto?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge)
+
 1:1 multilingual property editor wrapper for Umbraco
 
 #### Installation

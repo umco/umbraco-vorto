@@ -263,11 +263,12 @@
 REM # Copy files
 REM #################################################
 
+IF %25ComputerName%25 == MBP13-PC-BC (
 IF NOT "$(SolutionDir)" == "*Undefined*" (
 xcopy /s /y "$(TargetPath)" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.2.6\bin"
 xcopy /s /y "$(TargetDir)Our.Umbraco.Vorto.pdb" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.2.6\bin"
-REM xcopy /s /y "$(TargetDir)Umbraco.Tests.dll" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.2.6\bin"
 xcopy /s /y "$(ProjectDir)Web\UI\*" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.2.6"
+)
 )</PostBuildEvent>
   </PropertyGroup>
   <Import Project="$(SolutionDir)\.nuget\NuGet.targets" Condition="Exists('$(SolutionDir)\.nuget\NuGet.targets')" />

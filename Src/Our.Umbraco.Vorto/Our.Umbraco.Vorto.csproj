@@ -250,6 +250,7 @@
     <Content Include="Web\UI\App_Plugins\Vorto\views\vorto.languageSourceRadioList.html" />
     <Content Include="Web\UI\App_Plugins\Vorto\views\vorto.propertyEditorPicker.html" />
     <Content Include="Web\UI\App_Plugins\Vorto\views\vorto.html" />
+    <Content Include="Web\UI\App_Plugins\Vorto\views\vorto.rtlBehaviourPicker.html" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>

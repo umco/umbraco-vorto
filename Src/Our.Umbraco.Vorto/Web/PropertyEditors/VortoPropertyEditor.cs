@@ -39,7 +39,8 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 			_defaultPreValues = new Dictionary<string, object>
 			{
 				{"languageSource", "installed"},
-				{"mandatoryBehaviour", "ignore"}
+				{"mandatoryBehaviour", "ignore"},
+				{"rtlBehaviour", "ignore"},
 			};
 		}
 
@@ -69,6 +70,9 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 
 			[PreValueField("mandatoryBehaviour", "Mandatory Field Behaviour", "/App_Plugins/Vorto/views/vorto.mandatoryBehaviourPicker.html", Description = "Select how Vorto should handle mandatory fields.")]
 			public string MandatoryBehaviour { get; set; }
+            
+			[PreValueField("rtlBehaviour", "RTL Behaviour", "/App_Plugins/Vorto/views/vorto.rtlBehaviourPicker.html", Description = "[EXPERIMENTAL] Select how Vorto should handle Right-to-left languages. This feature is experimental so depending on the property being wrapped, results may vary.")]
+            public string RtlBehaviour { get; set; }
 
             [PreValueField("hideLabel", "Hide Label", "boolean", Description = "Hide the Umbraco property title and description, making the Vorto span the entire page width")]
             public bool HideLabel { get; set; }

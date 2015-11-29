@@ -110,3 +110,9 @@
     border: solid 1px #ddd;
     padding: 15px;
 }
+
+.vorto-property.rtl input[type=text], 
+.vorto-property.rtl input[type=email], 
+.vorto-property.rtl textarea {
+    direction:rtl;
+}

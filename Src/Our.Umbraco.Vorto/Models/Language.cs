@@ -1,4 +1,4 @@
-﻿using Newtonsoft.Json;
+using Newtonsoft.Json;
 
 namespace Our.Umbraco.Vorto.Models
 {
@@ -15,5 +15,8 @@ namespace Our.Umbraco.Vorto.Models
 
 		[JsonProperty("isDefault")]
 		public bool IsDefault { get; set; }
+
+        	[JsonProperty("isRightToLeft")]
+        	public bool IsRightToLeft { get; set; }
 	}
 }

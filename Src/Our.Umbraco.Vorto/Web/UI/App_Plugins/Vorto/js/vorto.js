@@ -45,7 +45,7 @@
 
         $scope.model.value = {
             values: $.extend({}, $scope.model.value.values),
-            dtdguid: 0
+            dtdguid: "00000000-0000-0000-0000-000000000000"
         };
 
         $scope.setCurrentLanguage = function (language, dontBroadcast) {

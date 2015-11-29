@@ -88,6 +88,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 		public IEnumerable<object> GetLanguages(string section, int id, int parentId, Guid dtdguid)
 		{
 			var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdguid);
+		    if (dtd == null) return Enumerable.Empty<object>();
+
 			var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
 			var languageSource = preValues.ContainsKey("languageSource") ? preValues["languageSource"].Value : "";
 			var primaryLanguage = preValues.ContainsKey("primaryLanguage") ? preValues["primaryLanguage"].Value : "";

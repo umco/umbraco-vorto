@@ -3,12 +3,27 @@
     '$rootScope',
     'appState',
     'editorState',
+    'formHelper',
     'umbPropEditorHelper',
     'Our.Umbraco.Resources.Vorto.vortoResources',
     'Our.Umbraco.Services.Vorto.vortoLocalStorageService',
-    function ($scope, $rootScope, appState, editorState, umbPropEditorHelper, vortoResources, localStorageService) {
+    function ($scope, $rootScope, appState, editorState, formHelper, umbPropEditorHelper, vortoResources, localStorageService) {
 
         var currentSection = appState.getSectionState("currentSection");
+
+        // Get node context
+        // DTGE/NC expose the context on the scope
+        // to avoid overwriting the editorState
+        // so check for a context on the scope first
+        var parentScope = $scope;
+        var nodeContext = undefined;
+        while (!nodeContext && parentScope.$id !== $rootScope.$id) {
+            parentScope = parentScope.$parent;
+            nodeContext = parentScope.nodeContext;
+        }
+        if (!nodeContext) {
+            nodeContext = editorState.current;
+        }
 
         $scope.languages = [];
         $scope.pinnedLanguages = [];
@@ -16,6 +31,7 @@
 
         $scope.currentLanguage = undefined;
         $scope.activeLanguage = undefined;
+        $scope.realActiveLanguage = undefined;
 
         var cookieUnsyncedProps = localStorageService.get("vortoUnsyncedProps", []);
         $scope.sync = !_.contains(cookieUnsyncedProps, $scope.model.id);
@@ -29,7 +45,7 @@
 
         $scope.model.value = {
             values: $.extend({}, $scope.model.value.values),
-            dtdguid: 0
+            dtdguid: "00000000-0000-0000-0000-000000000000"
         };
 
         $scope.setCurrentLanguage = function (language, dontBroadcast) {
@@ -70,7 +86,6 @@
         };
 
         $scope.pinLanguage = function (language) {
-            console.log("pin");
             if ($scope.sync) {
 
                 // Update cookie
@@ -88,7 +103,6 @@
         };
 
         $scope.unpinLanguage = function (language) {
-            console.log(language);
             if ($scope.sync) {
 
                 // Update cookie
@@ -114,14 +128,12 @@
             });
         };
 
-        $scope.$on("languageValueChange", function (evt, delta) {
-            $scope.model.value.values = $.extend({},
-                $scope.model.value.values,
-                delta);
+        var unsubReSync = $scope.$on("reSync", function (evt) {
+            reSync();
         });
 
-        $scope.$on("reSync", function (evt) {
-            reSync();
+        $scope.$on("$destroy", function() {
+            unsubReSync();
         });
 
         $scope.$watchCollection("pinnedLanguages", function (pinnedLanguages) {
@@ -147,6 +159,13 @@
 
         });
 
+        $scope.$watch("activeLanguage", function(newLanguage) {
+            if (newLanguage && $scope.realActiveLanguage && $scope.realActiveLanguage.isoCode !== newLanguage.isoCode) {
+                $scope.$broadcast("vortoSyncLanguageValue", { language: $scope.realActiveLanguage.isoCode });
+            }
+            $scope.realActiveLanguage = $scope.activeLanguage;
+        });
+
         $scope.$watch("sync", function (shouldSync) {
             var tmp;
             if (shouldSync) {
@@ -164,9 +183,24 @@
             }
         });
 
-        $scope.$watch("model.value", function () {
+        var unsubscribe = $scope.$on("formSubmitting", function (ev, args) {
+            $scope.$broadcast("vortoSyncLanguageValue", { language: $scope.realActiveLanguage.isoCode });
             validateProperty();
-        }, true);
+            if ($scope.vortoForm.$valid) {
+                // Strip out empty entries
+                var cleanValue = {};
+                _.each($scope.languages, function(language) {
+                    if ($scope.model.value.values[language.isoCode] && $scope.model.value.values[language.isoCode].length > 0) {
+                        cleanValue[language.isoCode] = $scope.model.value.values[language.isoCode];
+                    }
+                });
+                $scope.model.value.values = !_.isEmpty(cleanValue) ? cleanValue : undefined;
+            }
+        });
+
+        $scope.$on('$destroy', function () {
+            unsubscribe();
+        });
 
         var reSync = function () {
             if ($scope.sync) {
@@ -262,7 +296,7 @@
             $scope.property.viewPath = umbPropEditorHelper.getViewPath(dataType.view);
 
             // Get the current properties datatype
-            vortoResources.getDataTypeByAlias(currentSection, editorState.current.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
+            vortoResources.getDataTypeByAlias(currentSection, nodeContext.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
 
                 $scope.model.value.dtdguid = dataType2.guid;
 
@@ -271,6 +305,17 @@
                     .then(function (languages) {
 
                         $scope.languages = languages;
+
+                        if (!$scope.model.value.values) {
+                            $scope.model.value.values = {};
+                        }
+
+                        _.each($scope.languages, function (language) {
+                            if (!$scope.model.value.values.hasOwnProperty(language.isoCode)) {
+                                $scope.model.value.values[language.isoCode] = $scope.model.value.values[language.isoCode];
+                            }
+                        });
+
                         $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
                             return itm.isDefault;
                         });
@@ -329,13 +374,18 @@ angular.module("umbraco.directives").directive('vortoProperty',
             scope.model = {};
             scope.model.config = scope.config;
             scope.model.alias = "vorto-" + scope.language + "-" + scope.propertyAlias;
-            scope.model.value = scope.value;
+            scope.model.value = scope.value.values[scope.language];
 
-            scope.$watch('model.value', function (newValue, oldValue) {
-                var obj = {};
-                obj[scope.language] = newValue;
-                scope.$emit('languageValueChange', obj);
-            }, true);
+            var unsubscribe = scope.$on("vortoSyncLanguageValue", function (ev, args) {
+                if (args.language === scope.language) {
+                    scope.$broadcast("formSubmitting", { scope: scope });
+                    scope.value.values[scope.language] = scope.model.value;
+                }
+            });
+
+            scope.$on('$destroy', function () {
+                unsubscribe();
+            });
         };
 
         return {

@@ -32,7 +32,8 @@ namespace Our.Umbraco.Vorto.Converters
 				LogHelper.Error<VortoValueConverter>("Error converting Vorto value", e);
 			}
 
-			return null;
+            //return no value as a default value
+			return string.Empty;
 		}
 	}
 }

@@ -43,8 +43,8 @@
             view: ""
         };
 
-        $scope.model.value = {
-            values: $.extend({}, $scope.model.value.values),
+        $scope.model.value = $scope.model.value || {
+            values: {},
             dtdguid: "00000000-0000-0000-0000-000000000000"
         };
 

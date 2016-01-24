@@ -73,7 +73,7 @@ namespace Our.Umbraco.Vorto.Extensions
                 {
                     // Get the serialized value
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                    var value = vortoModel.Values[bestMatchCultureName];
+                    var value = vortoModel.Values[bestMatchCultureName]; 
 
                     if (value != null && !value.ToString().IsNullOrWhiteSpace())
                     {
@@ -87,50 +87,32 @@ namespace Our.Umbraco.Vorto.Extensions
                         // NB: IPropertyEditorValueConverter not to be confused with
                         // IPropertyValueConverter which are the ones most people are creating
                         var properyType = CreateDummyPropertyType(targetDataType.Id, targetDataType.PropertyEditorAlias, content.ContentType);
-                        var converters = PropertyValueConvertersResolver.Current.Converters.ToArray();
 
-                        // In umbraco, there are default value converters that try to convert the 
-                        // value if all else fails. The problem is, they are also in the list of
-                        // converters, and the means for filtering these out is internal, so
-                        // we currently have to try ALL converters to see if they can convert
-                        // rather than just finding the most appropreate. If the ability to filter
-                        // out default value converters becomes public, the following logic could
-                        // and probably should be changed.
-                        foreach (var converter in converters.Where(x => x.IsConverter(properyType)))
-                        {
-                            // Convert the type using a found value converter
-                            var value2 = converter.ConvertDataToSource(properyType, value, false);
+                        // Try convert data to source
+                        var converted = properyType.ConvertDataToSource(value, false);
+                        if (converted is T)
+                            return (T)converted;
 
-                            // If the value is of type T, just return it
-                            if (value2 is T)
-                                return (T)value2;
+                        var convertAttempt = converted.TryConvertTo<T>();
+                        if (convertAttempt.Success)
+                            return convertAttempt.Result;
 
-                            // Value is not final value type, so try a regular type conversion aswell
-                            var convertAttempt = value2.TryConvertTo<T>();
-                            if (convertAttempt.Success)
-                                return convertAttempt.Result;
+                        // Try convert source to object
+                        converted = properyType.ConvertSourceToObject(value, false);
+                        if (converted is T)
+                            return (T)converted;
 
-                            // If ConvertDataToSource failed try ConvertSourceToObject.
-                            var value3 = converter.ConvertSourceToObject(properyType, value, false);
+                        convertAttempt = converted.TryConvertTo<T>();
+                        if (convertAttempt.Success)
+                            return convertAttempt.Result;
 
-                            // If the value is of type T, just return it
-                            if (value3 is T)
-                                return (T)value3;
-
-                            // Value is not final value type, so try a regular type conversion aswell
-                            var convertAttempt2 = value3.TryConvertTo<T>();
-                            if (convertAttempt2.Success)
-                                return convertAttempt2.Result;
-                        }
-
-                        // Value is not final value type, so try a regular type conversion
-                        var convertAttempt3 = value.TryConvertTo<T>();
-                        if (convertAttempt3.Success)
-                            return convertAttempt3.Result;
+                        // Try just converting
+                        var convertAttempt2 = value.TryConvertTo<T>();
+                        if (convertAttempt2.Success)
+                            return convertAttempt2.Result;
 
                         // Still not right type so return default value
                         return defaultValue;
-
                     }
                 }
             }

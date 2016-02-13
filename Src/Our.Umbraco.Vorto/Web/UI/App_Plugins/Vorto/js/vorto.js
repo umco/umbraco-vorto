@@ -340,7 +340,7 @@ angular.module("umbraco.directives").directive('vortoProperty',
             restrict: "E",
             rep1ace: true,
             link: link,
-            templateUrl: 'views/directives/umb-editor.html',
+            templateUrl: 'views/components/property/umb-property-editor.html',
             scope: {
                 propertyEditorView: '=view',
                 config: '=',

@@ -5,7 +5,6 @@ using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.PublishedContent;
-using Umbraco.Core.PropertyEditors;
 using Umbraco.Web;
 
 namespace Our.Umbraco.Vorto.Extensions

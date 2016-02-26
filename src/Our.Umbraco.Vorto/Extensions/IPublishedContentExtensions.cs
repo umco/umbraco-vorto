@@ -136,7 +136,7 @@ namespace Our.Umbraco.Vorto.Extensions
             var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive, default(T));
             if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
                 result = content.DoGetVortoValue<T>(propertyAlias, fallbackCultureName, recursive, defaultValue);
-
+             
             return result;
         }
 

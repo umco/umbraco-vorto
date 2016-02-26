@@ -39,6 +39,7 @@
   <!-- NUGET ONLY PROPERTIES -->
   <PropertyGroup>
     <PackageId>Our.Umbraco.Vorto</PackageId>
+    <NugetPackageName>Vorto for Umbraco</NugetPackageName>
     <Copyright>Copyright &#169; 2015 The Outfield, Our Umbraco and other contributors</Copyright>
     <Owners>Matt Brailsford</Owners>
     <IconUrl>https://raw.githubusercontent.com/mattbrailsford/umbraco-vorto/develop/assets/vorto.png</IconUrl>
@@ -177,7 +178,7 @@
     <MSBuild.NuGet.Tasks.ManifestUpdate
       ManifestFile="$(BuildNuGetDir)\package.nuspec"
       WorkingDirectory="$(BuildNuGetDir)"
-      Title="$(PackageName)"
+      Title="$(NugetPackageName)"
       Description="$(Readme)"
       Summary="$(Readme)"
       Version="$(ProductVersion)"

@@ -87,8 +87,8 @@ namespace Our.Umbraco.Vorto.Extensions
                         // IPropertyValueConverter which are the ones most people are creating
                         var properyType = CreateDummyPropertyType(targetDataType.Id, targetDataType.PropertyEditorAlias, content.ContentType);
 
-                        // Try convert data to source
-                        var converted = properyType.ConvertDataToSource(value, false);
+                        // Try convert source to object
+                        var converted = properyType.ConvertSourceToObject(value, false);
                         if (converted is T)
                             return (T)converted;
 
@@ -96,8 +96,8 @@ namespace Our.Umbraco.Vorto.Extensions
                         if (convertAttempt.Success)
                             return convertAttempt.Result;
 
-                        // Try convert source to object
-                        converted = properyType.ConvertSourceToObject(value, false);
+                        // Try convert data to source
+                        converted = properyType.ConvertDataToSource(value, false);
                         if (converted is T)
                             return (T)converted;
 

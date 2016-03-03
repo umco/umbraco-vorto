@@ -24,6 +24,7 @@ namespace Our.Umbraco.Vorto.Extensions
                 {
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
                     if (!bestMatchCultureName.IsNullOrWhiteSpace() 
+                        && vortoModel.Values.ContainsKey(bestMatchCultureName)
                         && vortoModel.Values[bestMatchCultureName] != null
                         && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace()) 
                         return true;
@@ -72,10 +73,13 @@ namespace Our.Umbraco.Vorto.Extensions
                 {
                     // Get the serialized value
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                    var value = vortoModel.Values[bestMatchCultureName]; 
-
-                    if (value != null && !value.ToString().IsNullOrWhiteSpace())
+                    if (!bestMatchCultureName.IsNullOrWhiteSpace()
+                        && vortoModel.Values.ContainsKey(bestMatchCultureName)
+                        && vortoModel.Values[bestMatchCultureName] != null
+                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
                     {
+                        var value = vortoModel.Values[bestMatchCultureName];
+
                         // Get target datatype
                         var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
 
@@ -85,30 +89,28 @@ namespace Our.Umbraco.Vorto.Extensions
                         // just ignoring these when looking up converters.
                         // NB: IPropertyEditorValueConverter not to be confused with
                         // IPropertyValueConverter which are the ones most people are creating
-                        var properyType = CreateDummyPropertyType(targetDataType.Id, targetDataType.PropertyEditorAlias, content.ContentType);
-
-                        // Try convert data to source
-                        var converted = properyType.ConvertDataToSource(value, false);
-                        if (converted is T)
-                            return (T)converted;
-
-                        var convertAttempt = converted.TryConvertTo<T>();
-                        if (convertAttempt.Success)
-                            return convertAttempt.Result;
+                        var properyType = CreateDummyPropertyType(
+                            targetDataType.Id,
+                            targetDataType.PropertyEditorAlias,
+                            content.ContentType);
 
                         // Try convert source to object
-                        converted = properyType.ConvertSourceToObject(value, false);
-                        if (converted is T)
-                            return (T)converted;
+                        var converted = properyType.ConvertSourceToObject(value, false);
+                        if (converted is T) return (T)converted;
+
+                        var convertAttempt = converted.TryConvertTo<T>();
+                        if (convertAttempt.Success) return convertAttempt.Result;
+
+                        // Try convert data to source
+                        converted = properyType.ConvertDataToSource(value, false);
+                        if (converted is T) return (T)converted;
 
                         convertAttempt = converted.TryConvertTo<T>();
-                        if (convertAttempt.Success)
-                            return convertAttempt.Result;
+                        if (convertAttempt.Success) return convertAttempt.Result;
 
                         // Try just converting
                         var convertAttempt2 = value.TryConvertTo<T>();
-                        if (convertAttempt2.Success)
-                            return convertAttempt2.Result;
+                        if (convertAttempt2.Success) return convertAttempt2.Result;
 
                         // Still not right type so return default value
                         return defaultValue;

@@ -85,9 +85,9 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			};
 		}
 
-		public IEnumerable<object> GetLanguages(string section, int id, int parentId, Guid dtdguid)
+        public IEnumerable<object> GetLanguages(string section, int id, int parentId, Guid dtdGuid)
 		{
-			var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdguid);
+            var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdGuid);
 		    if (dtd == null) return Enumerable.Empty<object>();
 
 			var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;

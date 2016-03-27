@@ -46,7 +46,13 @@
         $scope.model.value = $scope.model.value || {
             values: {},
             dtdGuid: "00000000-0000-0000-0000-000000000000"
-        }; 
+        };
+
+        // Fix mixed spelling of dtdGuid
+        if ($scope.model.value.dtdguid) {
+            $scope.model.value.dtdGuid = $scope.model.value.dtdguid;
+            delete $scope.model.value.dtdguid;
+        }
 
         $scope.setCurrentLanguage = function (language, dontBroadcast) {
 

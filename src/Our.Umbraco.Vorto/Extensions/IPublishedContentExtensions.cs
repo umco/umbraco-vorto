@@ -1,5 +1,4 @@
-﻿using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;

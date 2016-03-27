@@ -5,13 +5,11 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Web.Http;
-using AutoMapper;
 using umbraco;
 using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.PropertyEditors;
 using Umbraco.Web.Editors;
-using Umbraco.Web.Models.ContentEditing;
 using Umbraco.Web.Mvc;
 using Language = Our.Umbraco.Vorto.Models.Language;
 

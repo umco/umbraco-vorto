@@ -94,22 +94,27 @@ namespace Our.Umbraco.Vorto.Extensions
                             content.ContentType);
 
                         // Try convert source to object
-                        var converted = properyType.ConvertSourceToObject(value, false);
-                        if (converted is T) return (T)converted;
+                        // We try this first as the value is stored as JSON not
+                        // as XML as would occur in the XML cache as in the act
+                        // of concerting to XML this would ordinarily get called
+                        // but with JSON it doesn't, so we try this first
+                        var converted1 = properyType.ConvertDataToSource(value, false);
+                        if (converted1 is T) return (T)converted1;
 
-                        var convertAttempt = converted.TryConvertTo<T>();
+                        var convertAttempt = converted1.TryConvertTo<T>();
                         if (convertAttempt.Success) return convertAttempt.Result;
 
                         // Try convert data to source
-                        converted = properyType.ConvertDataToSource(value, false);
-                        if (converted is T) return (T)converted;
+                        // If the source value isn't right, try converting to object
+                        var converted2 = properyType.ConvertSourceToObject(converted1, false);
+                        if (converted2 is T) return (T)converted2;
 
-                        convertAttempt = converted.TryConvertTo<T>();
+                        convertAttempt = converted2.TryConvertTo<T>();
                         if (convertAttempt.Success) return convertAttempt.Result;
 
                         // Try just converting
-                        var convertAttempt2 = value.TryConvertTo<T>();
-                        if (convertAttempt2.Success) return convertAttempt2.Result;
+                        convertAttempt = value.TryConvertTo<T>();
+                        if (convertAttempt.Success) return convertAttempt.Result;
 
                         // Still not right type so return default value
                         return defaultValue;

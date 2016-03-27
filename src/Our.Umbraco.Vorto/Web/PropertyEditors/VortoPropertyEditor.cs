@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ClientDependency.Core;
-using log4net.Repository.Hierarchy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Our.Umbraco.Vorto.Helpers;
@@ -101,20 +98,22 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				try
 				{
 					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
+				    if (value.Values != null)
+				    {
+				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
+				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+				        var propType = new PropertyType(dtd);
 
-					var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-					var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-					var propType = new PropertyType(dtd);
+				        var keys = value.Values.Keys.ToArray();
+				        foreach (var key in keys)
+				        {
+				            var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
+				            var newValue = propEditor.ValueEditor.ConvertDbToString(prop, propType, dataTypeService);
+				            value.Values[key] = newValue;
+				        }
 
-					var keys = value.Values.Keys.ToArray();
-					foreach (var key in keys)
-					{
-						var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
-						var newValue = propEditor.ValueEditor.ConvertDbToString(prop, propType, dataTypeService);
-						value.Values[key] = newValue;
-					}
-
-					property.Value = JsonConvert.SerializeObject(value);
+				        property.Value = JsonConvert.SerializeObject(value);
+				    }
 				}
 				catch (Exception ex)
 				{
@@ -132,20 +131,22 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				try
 				{
 					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
+				    if (value.Values != null)
+				    {
+				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
+				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+				        var propType = new PropertyType(dtd);
 
-					var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-					var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-					var propType = new PropertyType(dtd);
+				        var keys = value.Values.Keys.ToArray();
+				        foreach (var key in keys)
+				        {
+				            var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
+				            var newValue = propEditor.ValueEditor.ConvertDbToEditor(prop, propType, dataTypeService);
+				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
+				        }
 
-					var keys = value.Values.Keys.ToArray();
-					foreach (var key in keys)
-					{
-						var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
-						var newValue = propEditor.ValueEditor.ConvertDbToEditor(prop, propType, dataTypeService);
-						value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
-					}
-
-					property.Value = JsonConvert.SerializeObject(value);
+				        property.Value = JsonConvert.SerializeObject(value);
+				    }
 				}
 				catch (Exception ex)
 				{
@@ -163,20 +164,22 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				try
 				{
 					var value = JsonConvert.DeserializeObject<VortoValue>(editorValue.Value.ToString());
+				    if (value.Values != null)
+				    {
+				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
+				        var preValues =
+				            ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
+				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
 
-					var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-					var preValues = ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
-					var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-
-					var keys = value.Values.Keys.ToArray();
-					foreach (var key in keys)
-					{
-						var propData = new ContentPropertyData(value.Values[key], preValues, new Dictionary<string, object>());
-						var newValue = propEditor.ValueEditor.ConvertEditorToDb(propData, value.Values[key]);
-						value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
-					}
-
-					return JsonConvert.SerializeObject(value);
+				        var keys = value.Values.Keys.ToArray();
+				        foreach (var key in keys)
+				        {
+				            var propData = new ContentPropertyData(value.Values[key], preValues, new Dictionary<string, object>());
+				            var newValue = propEditor.ValueEditor.ConvertEditorToDb(propData, value.Values[key]);
+				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
+				        }
+				    }
+				    return JsonConvert.SerializeObject(value);
 				}
 				catch (Exception ex)
 				{

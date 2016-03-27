@@ -16,7 +16,7 @@ namespace Our.Umbraco.Vorto.Models
 		[JsonProperty("isDefault")]
 		public bool IsDefault { get; set; }
 
-        	[JsonProperty("isRightToLeft")]
-        	public bool IsRightToLeft { get; set; }
+        [JsonProperty("isRightToLeft")]
+        public bool IsRightToLeft { get; set; }
 	}
 }

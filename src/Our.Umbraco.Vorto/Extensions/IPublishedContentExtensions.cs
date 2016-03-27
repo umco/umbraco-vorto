@@ -93,7 +93,7 @@ namespace Our.Umbraco.Vorto.Extensions
                             targetDataType.PropertyEditorAlias,
                             content.ContentType);
 
-                        // Try convert source to object
+                        // Try convert data to source
                         // We try this first as the value is stored as JSON not
                         // as XML as would occur in the XML cache as in the act
                         // of concerting to XML this would ordinarily get called
@@ -104,7 +104,7 @@ namespace Our.Umbraco.Vorto.Extensions
                         var convertAttempt = converted1.TryConvertTo<T>();
                         if (convertAttempt.Success) return convertAttempt.Result;
 
-                        // Try convert data to source
+                        // Try convert source to object
                         // If the source value isn't right, try converting to object
                         var converted2 = properyType.ConvertSourceToObject(converted1, false);
                         if (converted2 is T) return (T)converted2;

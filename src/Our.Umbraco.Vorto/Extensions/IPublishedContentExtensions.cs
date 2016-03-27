@@ -20,7 +20,7 @@ namespace Our.Umbraco.Vorto.Extensions
             {
                 var prop = content.GetProperty(propertyAlias);
                 var vortoModel = prop.Value as VortoValue;
-                if (vortoModel != null)
+                if (vortoModel != null && vortoModel.Values != null)
                 {
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
                     if (!bestMatchCultureName.IsNullOrWhiteSpace() 
@@ -69,7 +69,7 @@ namespace Our.Umbraco.Vorto.Extensions
             {
                 var prop = content.GetProperty(propertyAlias);
                 var vortoModel = prop.Value as VortoValue;
-                if (vortoModel != null)
+                if (vortoModel != null && vortoModel.Values != null)
                 {
                     // Get the serialized value
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);

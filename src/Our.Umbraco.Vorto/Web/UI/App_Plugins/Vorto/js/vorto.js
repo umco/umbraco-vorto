@@ -378,7 +378,16 @@ angular.module("umbraco.directives").directive('vortoProperty',
             scope[ctrl.$name] = ctrl;
 
             scope.model = {};
-            scope.model.config = scope.config;
+
+            // Some core property editors update the prevalues
+            // but then fail to check them incase the config
+            // is in the desired format, so to get round this
+            // we give each instance a clone of the original
+            // config so that changes made aren't remebered
+            // between tab loads
+            // bug here http://issues.umbraco.org/issue/U4-8266
+            scope.model.config = angular.copy(scope.config);
+
             scope.model.alias = scope.propertyAlias + "." + scope.language;
             scope.model.value = scope.value.values[scope.language];
 

@@ -93,7 +93,14 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 			public override string ConvertDbToString(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
 			{
 				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
-					return string.Empty;
+                    return string.Empty;
+
+                // Something weird is happening in core whereby ConvertDbToString is getting
+                // called loads of times on publish, forcing the property value to get converted
+                // again, which in tern screws up the values. To get round it, we create a 
+                // dummy property copying the original properties value, this way not overwriting
+                // the original property value allowing it to be re-converted again later
+                var prop2 = new Property(propertyType, property.Value);
 
 				try
 				{
@@ -112,7 +119,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				            value.Values[key] = newValue;
 				        }
 
-				        property.Value = JsonConvert.SerializeObject(value);
+                        prop2.Value = JsonConvert.SerializeObject(value);
 				    }
 				}
 				catch (Exception ex)
@@ -120,13 +127,20 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 					LogHelper.Error<VortoPropertyValueEditor>("Error converting DB value to String", ex);
 				}
 
-				return base.ConvertDbToString(property, propertyType, dataTypeService);
+                return base.ConvertDbToString(prop2, propertyType, dataTypeService);
 			}
 
 			public override object ConvertDbToEditor(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
 			{
 				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
-					return string.Empty;
+                    return string.Empty;
+
+                // Something weird is happening in core whereby ConvertDbToString is getting
+                // called loads of times on publish, forcing the property value to get converted
+                // again, which in tern screws up the values. To get round it, we create a 
+                // dummy property copying the original properties value, this way not overwriting
+                // the original property value allowing it to be re-converted again later
+                var prop2 = new Property(propertyType, property.Value);
 
 				try
 				{
@@ -145,7 +159,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
 				        }
 
-				        property.Value = JsonConvert.SerializeObject(value);
+                        prop2.Value = JsonConvert.SerializeObject(value);
 				    }
 				}
 				catch (Exception ex)
@@ -153,7 +167,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 					LogHelper.Error<VortoPropertyValueEditor>("Error converting DB value to Editor", ex);
 				}
 
-				return base.ConvertDbToEditor(property, propertyType, dataTypeService);
+                return base.ConvertDbToEditor(prop2, propertyType, dataTypeService);
 			}
 
 			public override object ConvertEditorToDb(ContentPropertyData editorValue, object currentValue)

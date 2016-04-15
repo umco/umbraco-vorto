@@ -1,10 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using ClientDependency.Core;
-using log4net.Repository.Hierarchy;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 using Our.Umbraco.Vorto.Helpers;
@@ -96,63 +93,81 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 			public override string ConvertDbToString(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
 			{
 				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
-					return string.Empty;
+                    return string.Empty;
+
+                // Something weird is happening in core whereby ConvertDbToString is getting
+                // called loads of times on publish, forcing the property value to get converted
+                // again, which in tern screws up the values. To get round it, we create a 
+                // dummy property copying the original properties value, this way not overwriting
+                // the original property value allowing it to be re-converted again later
+                var prop2 = new Property(propertyType, property.Value);
 
 				try
 				{
 					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
+				    if (value.Values != null)
+				    {
+				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
+				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+				        var propType = new PropertyType(dtd);
 
-					var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-					var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-					var propType = new PropertyType(dtd);
+				        var keys = value.Values.Keys.ToArray();
+				        foreach (var key in keys)
+				        {
+				            var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
+				            var newValue = propEditor.ValueEditor.ConvertDbToString(prop, propType, dataTypeService);
+				            value.Values[key] = newValue;
+				        }
 
-					var keys = value.Values.Keys.ToArray();
-					foreach (var key in keys)
-					{
-						var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
-						var newValue = propEditor.ValueEditor.ConvertDbToString(prop, propType, dataTypeService);
-						value.Values[key] = newValue;
-					}
-
-					property.Value = JsonConvert.SerializeObject(value);
+                        prop2.Value = JsonConvert.SerializeObject(value);
+				    }
 				}
 				catch (Exception ex)
 				{
 					LogHelper.Error<VortoPropertyValueEditor>("Error converting DB value to String", ex);
 				}
 
-				return base.ConvertDbToString(property, propertyType, dataTypeService);
+                return base.ConvertDbToString(prop2, propertyType, dataTypeService);
 			}
 
 			public override object ConvertDbToEditor(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
 			{
 				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
-					return string.Empty;
+                    return string.Empty;
+
+                // Something weird is happening in core whereby ConvertDbToString is getting
+                // called loads of times on publish, forcing the property value to get converted
+                // again, which in tern screws up the values. To get round it, we create a 
+                // dummy property copying the original properties value, this way not overwriting
+                // the original property value allowing it to be re-converted again later
+                var prop2 = new Property(propertyType, property.Value);
 
 				try
 				{
 					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
+				    if (value.Values != null)
+				    {
+				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
+				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+				        var propType = new PropertyType(dtd);
 
-					var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-					var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-					var propType = new PropertyType(dtd);
+				        var keys = value.Values.Keys.ToArray();
+				        foreach (var key in keys)
+				        {
+				            var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
+				            var newValue = propEditor.ValueEditor.ConvertDbToEditor(prop, propType, dataTypeService);
+				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
+				        }
 
-					var keys = value.Values.Keys.ToArray();
-					foreach (var key in keys)
-					{
-						var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
-						var newValue = propEditor.ValueEditor.ConvertDbToEditor(prop, propType, dataTypeService);
-						value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
-					}
-
-					property.Value = JsonConvert.SerializeObject(value);
+                        prop2.Value = JsonConvert.SerializeObject(value);
+				    }
 				}
 				catch (Exception ex)
 				{
 					LogHelper.Error<VortoPropertyValueEditor>("Error converting DB value to Editor", ex);
 				}
 
-				return base.ConvertDbToEditor(property, propertyType, dataTypeService);
+                return base.ConvertDbToEditor(prop2, propertyType, dataTypeService);
 			}
 
 			public override object ConvertEditorToDb(ContentPropertyData editorValue, object currentValue)
@@ -163,20 +178,22 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				try
 				{
 					var value = JsonConvert.DeserializeObject<VortoValue>(editorValue.Value.ToString());
+				    if (value.Values != null)
+				    {
+				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
+				        var preValues =
+				            ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
+				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
 
-					var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-					var preValues = ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
-					var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-
-					var keys = value.Values.Keys.ToArray();
-					foreach (var key in keys)
-					{
-						var propData = new ContentPropertyData(value.Values[key], preValues, new Dictionary<string, object>());
-						var newValue = propEditor.ValueEditor.ConvertEditorToDb(propData, value.Values[key]);
-						value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
-					}
-
-					return JsonConvert.SerializeObject(value);
+				        var keys = value.Values.Keys.ToArray();
+				        foreach (var key in keys)
+				        {
+				            var propData = new ContentPropertyData(value.Values[key], preValues, new Dictionary<string, object>());
+				            var newValue = propEditor.ValueEditor.ConvertEditorToDb(propData, value.Values[key]);
+				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
+				        }
+				    }
+				    return JsonConvert.SerializeObject(value);
 				}
 				catch (Exception ex)
 				{

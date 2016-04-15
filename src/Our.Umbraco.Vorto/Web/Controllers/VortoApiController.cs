@@ -5,13 +5,11 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Web.Http;
-using AutoMapper;
 using umbraco;
 using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.PropertyEditors;
 using Umbraco.Web.Editors;
-using Umbraco.Web.Models.ContentEditing;
 using Umbraco.Web.Mvc;
 using Language = Our.Umbraco.Vorto.Models.Language;
 
@@ -85,9 +83,9 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			};
 		}
 
-		public IEnumerable<object> GetLanguages(string section, int id, int parentId, Guid dtdguid)
+        public IEnumerable<object> GetLanguages(string section, int id, int parentId, Guid dtdGuid)
 		{
-			var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdguid);
+            var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdGuid);
 		    if (dtd == null) return Enumerable.Empty<object>();
 
 			var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
@@ -123,7 +121,7 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 								IsoCode = x.Name,
 								Name = x.DisplayName,
 								NativeName = x.NativeName,
-                                				IsRightToLeft = x.TextInfo.IsRightToLeft
+                                IsRightToLeft = x.TextInfo.IsRightToLeft
 							}));
 					}
 				}
@@ -139,8 +137,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 							{
 								IsoCode = x.Name,
 								Name = x.DisplayName,
-                                				NativeName = x.NativeName,
-                                				IsRightToLeft = x.TextInfo.IsRightToLeft
+                                NativeName = x.NativeName,
+                                IsRightToLeft = x.TextInfo.IsRightToLeft
 							}));
 				}
 			}
@@ -152,8 +150,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 					{
 						IsoCode = x.Name,
 						Name = x.DisplayName,
-                        			NativeName = x.NativeName,
-                        			IsRightToLeft = x.TextInfo.IsRightToLeft
+                        NativeName = x.NativeName,
+                        IsRightToLeft = x.TextInfo.IsRightToLeft
 					}));
 			}
 
@@ -210,8 +208,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 				{
 					IsoCode = x.Name,
 					Name = x.DisplayName,
-                    			NativeName = x.NativeName,
-                    			IsRightToLeft = x.TextInfo.IsRightToLeft
+                    NativeName = x.NativeName,
+                    IsRightToLeft = x.TextInfo.IsRightToLeft
 				}));
 
 			return languages;

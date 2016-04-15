@@ -45,8 +45,14 @@
 
         $scope.model.value = $scope.model.value || {
             values: {},
-            dtdguid: "00000000-0000-0000-0000-000000000000"
-        }; 
+            dtdGuid: "00000000-0000-0000-0000-000000000000"
+        };
+
+        // Fix mixed spelling of dtdGuid
+        if ($scope.model.value.dtdguid) {
+            $scope.model.value.dtdGuid = $scope.model.value.dtdguid;
+            delete $scope.model.value.dtdguid;
+        }
 
         $scope.setCurrentLanguage = function (language, dontBroadcast) {
 
@@ -298,7 +304,7 @@
             // Get the current properties datatype
             vortoResources.getDataTypeByAlias(currentSection, nodeContext.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
 
-                $scope.model.value.dtdguid = dataType2.guid;
+                $scope.model.value.dtdGuid = dataType2.guid;
 
                 // Load the languages (this will trigger everything else to bind)
                 vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType2.guid)
@@ -372,7 +378,16 @@ angular.module("umbraco.directives").directive('vortoProperty',
             scope[ctrl.$name] = ctrl;
 
             scope.model = {};
-            scope.model.config = scope.config;
+
+            // Some core property editors update the prevalues
+            // but then fail to check them incase the config
+            // is in the desired format, so to get round this
+            // we give each instance a clone of the original
+            // config so that changes made aren't remebered
+            // between tab loads
+            // bug here http://issues.umbraco.org/issue/U4-8266
+            scope.model.config = angular.copy(scope.config);
+
             scope.model.alias = scope.propertyAlias + "." + scope.language;
             scope.model.value = scope.value.values[scope.language];
 
@@ -426,9 +441,9 @@ angular.module('umbraco.resources').factory('Our.Umbraco.Resources.Vorto.vortoRe
                     'Failed to retrieve datatype'
                 );
             },
-            getLanguages: function (section, id, parentId, dtdguid) {
+            getLanguages: function (section, id, parentId, dtdGuid) {
                 return umbRequestHelper.resourcePromise(
-                    $http.get("/umbraco/backoffice/VortoApi/VortoApi/GetLanguages?section=" + section + "&id=" + id + "&parentId=" + parentId + "&dtdguid=" + dtdguid),
+                    $http.get("/umbraco/backoffice/VortoApi/VortoApi/GetLanguages?section=" + section + "&id=" + id + "&parentId=" + parentId + "&dtdGuid=" + dtdGuid),
                     'Failed to retrieve languages'
                 );
             },

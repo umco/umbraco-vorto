@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;

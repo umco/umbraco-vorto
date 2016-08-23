@@ -199,6 +199,9 @@
                     if ($scope.model.value.values[language.isoCode] && JSON.stringify($scope.model.value.values[language.isoCode]).length > 0) {
                         cleanValue[language.isoCode] = $scope.model.value.values[language.isoCode];
                     }
+					else {
+						cleanValue[language.isoCode] = '';
+					}
                 });
                 $scope.model.value.values = !_.isEmpty(cleanValue) ? cleanValue : undefined;
             }

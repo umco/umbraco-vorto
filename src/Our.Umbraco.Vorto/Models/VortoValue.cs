@@ -6,7 +6,7 @@ namespace Our.Umbraco.Vorto.Models
 {
 	public class VortoValue
 	{
-	    internal VortoValue()
+	    public VortoValue()
 	    { }
 
 		[JsonProperty("values")]

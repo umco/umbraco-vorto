@@ -16,10 +16,10 @@ using Umbraco.Web.PropertyEditors;
 
 namespace Our.Umbraco.Vorto.Web.PropertyEditors
 {
-    [PropertyEditorAsset(ClientDependencyType.Javascript, "/App_Plugins/Vorto/js/jquery.hoverIntent.minified.js", Priority = 1)]
-	[PropertyEditorAsset(ClientDependencyType.Javascript, "/App_Plugins/Vorto/js/vorto.js", Priority = 2)]
-	[PropertyEditorAsset(ClientDependencyType.Css, "/App_Plugins/Vorto/css/vorto.css", Priority = 2)]
-	[PropertyEditor("Our.Umbraco.Vorto", "Vorto", "/App_Plugins/Vorto/Views/vorto.html",
+    [PropertyEditorAsset(ClientDependencyType.Javascript, "~/App_Plugins/Vorto/js/jquery.hoverIntent.minified.js", Priority = 1)]
+    [PropertyEditorAsset(ClientDependencyType.Javascript, "~/App_Plugins/Vorto/js/vorto.js", Priority = 2)]
+    [PropertyEditorAsset(ClientDependencyType.Css, "~/App_Plugins/Vorto/css/vorto.css", Priority = 2)]
+    [PropertyEditor("Our.Umbraco.Vorto", "Vorto", "~/App_Plugins/Vorto/Views/vorto.html",
 		ValueType = "JSON")]
 	public class VortoPropertyEditor : PropertyEditor
 	{
@@ -50,10 +50,10 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 
 		internal class VortoPreValueEditor : PreValueEditor
 		{
-			[PreValueField("dataType", "Data Type", "/App_Plugins/Vorto/views/vorto.propertyEditorPicker.html", Description = "Select the data type to wrap.")]
+            [PreValueField("dataType", "Data Type", "~/App_Plugins/Vorto/views/vorto.propertyEditorPicker.html", Description = "Select the data type to wrap.")]
 			public string DataType { get; set; }
 
-			[PreValueField("languageSource", "Language Source", "/App_Plugins/Vorto/views/vorto.languageSourceRadioList.html", Description = "Select where Vorto should lookup the languages from.")]
+            [PreValueField("languageSource", "Language Source", "~/App_Plugins/Vorto/views/vorto.languageSourceRadioList.html", Description = "Select where Vorto should lookup the languages from.")]
 			public string LanguageSource { get; set; }
 
 			[PreValueField("xpath", "Language Nodes XPath", "textstring", Description = "If using in-use language source, enter an XPath statement to locate nodes containing language settings.")]
@@ -62,13 +62,13 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 			[PreValueField("displayNativeNames", "Display Native Language Names", "boolean", Description = "Set whether to display language names in their native form.")]
 			public string DisplayNativeNames { get; set; }
 
-			[PreValueField("primaryLanguage", "Primary Language", "/App_Plugins/Vorto/views/vorto.languagePicker.html", Description = "Select the primary language for this field.")]
+            [PreValueField("primaryLanguage", "Primary Language", "~/App_Plugins/Vorto/views/vorto.languagePicker.html", Description = "Select the primary language for this field.")]
 			public string PrimaryLanguage { get; set; }
 
-			[PreValueField("mandatoryBehaviour", "Mandatory Field Behaviour", "/App_Plugins/Vorto/views/vorto.mandatoryBehaviourPicker.html", Description = "Select how Vorto should handle mandatory fields.")]
+            [PreValueField("mandatoryBehaviour", "Mandatory Field Behaviour", "~/App_Plugins/Vorto/views/vorto.mandatoryBehaviourPicker.html", Description = "Select how Vorto should handle mandatory fields.")]
 			public string MandatoryBehaviour { get; set; }
-            
-			[PreValueField("rtlBehaviour", "RTL Behaviour", "/App_Plugins/Vorto/views/vorto.rtlBehaviourPicker.html", Description = "[EXPERIMENTAL] Select how Vorto should handle Right-to-left languages. This feature is experimental so depending on the property being wrapped, results may vary.")]
+
+            [PreValueField("rtlBehaviour", "RTL Behaviour", "~/App_Plugins/Vorto/views/vorto.rtlBehaviourPicker.html", Description = "[EXPERIMENTAL] Select how Vorto should handle Right-to-left languages. This feature is experimental so depending on the property being wrapped, results may vary.")]
             public string RtlBehaviour { get; set; }
 
             [PreValueField("hideLabel", "Hide Label", "boolean", Description = "Hide the Umbraco property title and description, making the Vorto span the entire page width")]

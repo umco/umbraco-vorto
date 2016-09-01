@@ -237,6 +237,7 @@
     <Compile Include="Vorto.cs" />
     <Compile Include="Web\Controllers\VortoApiController.cs" />
     <Compile Include="Web\Events\VortoCacheExpire.cs" />
+    <Compile Include="Web\Events\VortoServerVariablesParser.cs" />
     <Compile Include="Web\PackageActions\DeleteFile.cs" />
     <Compile Include="Web\PropertyEditors\VortoPropertyEditor.cs" />
   </ItemGroup>

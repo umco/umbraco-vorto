@@ -42,6 +42,9 @@
             config: {},
             view: ""
         };
+        
+        if (!angular.isObject($scope.model.value))
+            $scope.model.value = {};
 
         $scope.model.value = $scope.model.value || {
             values: {},

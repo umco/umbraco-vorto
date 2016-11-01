@@ -304,8 +304,11 @@
             // Get the view path
             $scope.property.viewPath = umbPropEditorHelper.getViewPath(dataType.view);
 
+            // Get the property alias
+            var propAlias = $scope.model.propertyAlias || $scope.model.alias;
+
             // Get the current properties datatype
-            vortoResources.getDataTypeByAlias(currentSection, nodeContext.contentTypeAlias, $scope.model.alias).then(function (dataType2) {
+            vortoResources.getDataTypeByAlias(currentSection, nodeContext.contentTypeAlias, propAlias).then(function (dataType2) {
 
                 $scope.model.value.dtdGuid = dataType2.guid;
 

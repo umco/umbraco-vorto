@@ -42,9 +42,9 @@
             config: {},
             view: ""
         };
-        
+
         if (!angular.isObject($scope.model.value))
-            $scope.model.value = {};
+            $scope.model.value = undefined;
 
         $scope.model.value = $scope.model.value || {
             values: {},
@@ -400,6 +400,7 @@ angular.module("umbraco.directives").directive('vortoProperty',
             var unsubscribe = scope.$on("vortoSyncLanguageValue", function (ev, args) {
                 if (args.language === scope.language) {
                     scope.$broadcast("formSubmitting", { scope: scope });
+                    if (!scope.value.values) scope.value.values = {};
                     scope.value.values[scope.language] = scope.model.value;
                 }
             });

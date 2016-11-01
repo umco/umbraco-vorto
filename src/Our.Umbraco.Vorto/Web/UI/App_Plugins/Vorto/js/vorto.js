@@ -395,12 +395,13 @@ angular.module("umbraco.directives").directive('vortoProperty',
             scope.model.config = angular.copy(scope.config);
 
             scope.model.alias = scope.propertyAlias + "." + scope.language;
-            scope.model.value = scope.value.values[scope.language];
+            scope.model.value = scope.value.values ? scope.value.values[scope.language] : undefined;
 
             var unsubscribe = scope.$on("vortoSyncLanguageValue", function (ev, args) {
                 if (args.language === scope.language) {
                     scope.$broadcast("formSubmitting", { scope: scope });
-                    if (!scope.value.values) scope.value.values = {};
+                    if (!scope.value.values)
+                        scope.value.values = {};
                     scope.value.values[scope.language] = scope.model.value;
                 }
             });

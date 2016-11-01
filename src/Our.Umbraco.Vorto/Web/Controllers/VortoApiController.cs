@@ -42,8 +42,11 @@ namespace Our.Umbraco.Vorto.Web.Controllers
             IContentTypeComposition ct = null;
             
 		    switch (contentType)
-		    {
-		        case "content":
+            {
+                case "member":
+                    ct = Services.MemberTypeService.Get(contentTypeAlias);
+                    break;
+                case "content":
                     ct = Services.ContentTypeService.GetContentType(contentTypeAlias);
 		            break;
                 case "media":

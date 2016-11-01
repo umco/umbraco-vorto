@@ -39,20 +39,23 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 
 		public object GetDataTypeByAlias(string contentType, string contentTypeAlias, string propertyAlias)
 		{
-            IContentTypeComposition ct = null;
-            
-		    switch (contentType)
-		    {
-		        case "content":
-                    ct = Services.ContentTypeService.GetContentType(contentTypeAlias);
-		            break;
-                case "media":
-                    ct = Services.ContentTypeService.GetMediaType(contentTypeAlias);
-		            break;
-		    }
+			IContentTypeComposition ct = null;
 
-		    if (ct == null)
-		        return null;
+			switch (contentType)
+			{
+				case "member":
+					ct = Services.MemberTypeService.Get(contentTypeAlias);
+					break;
+				case "content":
+					ct = Services.ContentTypeService.GetContentType(contentTypeAlias);
+					break;
+				case "media":
+					ct = Services.ContentTypeService.GetMediaType(contentTypeAlias);
+					break;
+			}
+
+			if (ct == null)
+				return null;
 
 			var prop = ct.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
 			if (prop == null)
@@ -83,10 +86,10 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			};
 		}
 
-        public IEnumerable<object> GetLanguages(string section, int id, int parentId, Guid dtdGuid)
+		public IEnumerable<object> GetLanguages(string section, int id, int parentId, Guid dtdGuid)
 		{
-            var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdGuid);
-		    if (dtd == null) return Enumerable.Empty<object>();
+			var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdGuid);
+			if (dtd == null) return Enumerable.Empty<object>();
 
 			var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
 			var languageSource = preValues.ContainsKey("languageSource") ? preValues["languageSource"].Value : "";
@@ -99,7 +102,7 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 				var xpath = preValues.ContainsKey("xpath") ? preValues["xpath"].Value : "";
 
 				// Grab languages by xpath (only if in content section)
-                if (!string.IsNullOrWhiteSpace(xpath) && section == "content")
+				if (!string.IsNullOrWhiteSpace(xpath) && section == "content")
 				{
 					xpath = xpath.Replace("$currentPage",
 						string.Format("//*[@id={0} and @isDoc]", id)).Replace("$parentPage",
@@ -121,7 +124,7 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 								IsoCode = x.Name,
 								Name = x.DisplayName,
 								NativeName = x.NativeName,
-                                IsRightToLeft = x.TextInfo.IsRightToLeft
+								IsRightToLeft = x.TextInfo.IsRightToLeft
 							}));
 					}
 				}
@@ -137,8 +140,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 							{
 								IsoCode = x.Name,
 								Name = x.DisplayName,
-                                NativeName = x.NativeName,
-                                IsRightToLeft = x.TextInfo.IsRightToLeft
+								NativeName = x.NativeName,
+								IsRightToLeft = x.TextInfo.IsRightToLeft
 							}));
 				}
 			}
@@ -150,8 +153,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 					{
 						IsoCode = x.Name,
 						Name = x.DisplayName,
-                        NativeName = x.NativeName,
-                        IsRightToLeft = x.TextInfo.IsRightToLeft
+						NativeName = x.NativeName,
+						IsRightToLeft = x.TextInfo.IsRightToLeft
 					}));
 			}
 
@@ -208,8 +211,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 				{
 					IsoCode = x.Name,
 					Name = x.DisplayName,
-                    NativeName = x.NativeName,
-                    IsRightToLeft = x.TextInfo.IsRightToLeft
+					NativeName = x.NativeName,
+					IsRightToLeft = x.TextInfo.IsRightToLeft
 				}));
 
 			return languages;

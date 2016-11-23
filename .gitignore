@@ -44,3 +44,4 @@ packages/
 TEMP/
 Logs/
 NuGetBackup/
+.vs/

@@ -38,6 +38,7 @@
         $scope.sync = !_.contains(cookieUnsyncedProps, $scope.model.id);
 
         $scope.model.hideLabel = $scope.model.config.hideLabel == 1;
+        $scope.model.showCheckMark = $scope.model.config.showFilledLanguages == 1;
 
         $scope.property = {
             config: {},
@@ -133,6 +134,7 @@
         };
 
         $scope.isFilledIn = function (language) {
+            if (!$scope.model.showCheckMark) return;
             if (language == undefined) return;
             return _.find($scope.filledInLanguages, function (itm) {
                 return itm.isoCode == language.isoCode;

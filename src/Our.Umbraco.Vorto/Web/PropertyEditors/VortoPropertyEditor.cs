@@ -73,7 +73,10 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 
             [PreValueField("hideLabel", "Hide Label", "boolean", Description = "Hide the Umbraco property title and description, making the Vorto span the entire page width")]
             public bool HideLabel { get; set; }
-		}
+
+            [PreValueField("showFilledLanguages", "Show Languages With Content", "boolean", Description = "Show a tick-mark next to the language name when there is content for that language.")]
+            public bool ShowFilledLanguages { get; set; }
+        }
 
 		#endregion
 

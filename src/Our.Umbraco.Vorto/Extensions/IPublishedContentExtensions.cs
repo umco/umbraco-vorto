@@ -134,7 +134,9 @@ namespace Our.Umbraco.Vorto.Extensions
 		{
 			if (cultureName == null)
 				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
-
+			if (typeof(T) == typeof(string) && string.IsNullOrEmpty(defaultValue)) {
+				defaultValue = null;
+			}
 		    return content.DoInnerGetVortoValue(propertyAlias, cultureName, recursive, defaultValue);
 		}
 

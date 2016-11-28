@@ -203,7 +203,7 @@
                         cleanValue[language.isoCode] = $scope.model.value.values[language.isoCode];
                     }
                 });
-                $scope.model.value.values = !_.isEmpty(cleanValue) ? cleanValue : undefined;
+                $scope.model.value.values = cleanValue;
             }
         });
 

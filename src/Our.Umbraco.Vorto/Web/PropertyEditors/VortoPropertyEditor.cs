@@ -95,7 +95,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
                     return string.Empty;
 
-                // Something weird is happening in core whereby ConvertDbToString is getting
+                // Something weird is happening n core whereby ConvertDbToString is getting
                 // called loads of times on publish, forcing the property value to get converted
                 // again, which in tern screws up the values. To get round it, we create a 
                 // dummy property copying the original properties value, this way not overwriting
@@ -107,6 +107,11 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
 				    if (value.Values != null)
 				    {
+					if(value.DtdGuid == Guid.Empty)
+					{
+						var vortoDtd = dataTypeService.GetDataTypeDefinitionById(propertyType.DataTypeDefinitionId);
+						value.DtdGuid = vortoDtd.Key;
+					}
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
 				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
 				        var propType = new PropertyType(dtd);
@@ -129,7 +134,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 
                 return base.ConvertDbToString(prop2, propertyType, dataTypeService);
 			}
-
+	
 			public override object ConvertDbToEditor(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
 			{
 				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())

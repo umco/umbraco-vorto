@@ -95,7 +95,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
                     return string.Empty;
 
-                // Something weird is happening n core whereby ConvertDbToString is getting
+                // Something weird is happening in core whereby ConvertDbToString is getting
                 // called loads of times on publish, forcing the property value to get converted
                 // again, which in tern screws up the values. To get round it, we create a 
                 // dummy property copying the original properties value, this way not overwriting

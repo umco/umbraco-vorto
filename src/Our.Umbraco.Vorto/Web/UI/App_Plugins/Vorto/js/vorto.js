@@ -307,8 +307,11 @@
             // Get the property alias
             var propAlias = $scope.model.propertyAlias || $scope.model.alias;
 
-            // Get the current properties datatype
-            vortoResources.getDataTypeByAlias(currentSection, nodeContext.contentTypeAlias, propAlias).then(function (dataType2) {
+        	// Get the content type alias
+            var contentTypeAlias = nodeContext.contentTypeAlias || nodeContext.alias;
+
+        	// Get the current properties datatype
+            vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias).then(function (dataType2) {
 
                 $scope.model.value.dtdGuid = dataType2.guid;
 

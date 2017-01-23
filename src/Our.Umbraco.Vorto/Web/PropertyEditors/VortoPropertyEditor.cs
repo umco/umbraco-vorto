@@ -71,11 +71,11 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
             [PreValueField("rtlBehaviour", "RTL Behaviour", "~/App_Plugins/Vorto/views/vorto.rtlBehaviourPicker.html", Description = "[EXPERIMENTAL] Select how Vorto should handle Right-to-left languages. This feature is experimental so depending on the property being wrapped, results may vary.")]
             public string RtlBehaviour { get; set; }
 
+            [PreValueField("showFilledLanguages", "Highlight Languages With Content", "boolean", Description = "Show a tick-mark next to the language name when there is content for that language.")]
+            public bool ShowFilledLanguages { get; set; }
+
             [PreValueField("hideLabel", "Hide Label", "boolean", Description = "Hide the Umbraco property title and description, making the Vorto span the entire page width")]
             public bool HideLabel { get; set; }
-
-            [PreValueField("showFilledLanguages", "Show Languages With Content", "boolean", Description = "Show a tick-mark next to the language name when there is content for that language.")]
-            public bool ShowFilledLanguages { get; set; }
         }
 
 		#endregion

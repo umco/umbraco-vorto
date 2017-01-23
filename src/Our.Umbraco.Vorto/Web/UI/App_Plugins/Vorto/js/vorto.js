@@ -183,6 +183,7 @@
                 $scope.$broadcast("vortoSyncLanguageValue", { language: $scope.realActiveLanguage.isoCode });
             }
             $scope.realActiveLanguage = $scope.activeLanguage;
+            detectFilledInLanguages();
         });
 
         $scope.$watch("sync", function (shouldSync) {
@@ -201,10 +202,6 @@
                 localStorageService.set('vortoUnsyncedProps', tmp);
             }
         });
-
-        $scope.$watch("model.value.values", function () {
-            detectFilledInLanguages();
-        }, true);
 
         var unsubscribe = $scope.$on("formSubmitting", function (ev, args) {
             $scope.$broadcast("vortoSyncLanguageValue", { language: $scope.realActiveLanguage.isoCode });

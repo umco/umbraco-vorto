@@ -46,7 +46,6 @@ namespace Our.Umbraco.Vorto.Web.Controllers
                 case "member":
                     ct = Services.MemberTypeService.Get(contentTypeAlias);
                     break;
-                case "settings":
                 case "content":
                     ct = Services.ContentTypeService.GetContentType(contentTypeAlias);
 		            break;
@@ -103,7 +102,7 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 				var xpath = preValues.ContainsKey("xpath") ? preValues["xpath"].Value : "";
 
 				// Grab languages by xpath (only if in content section)
-                if (!string.IsNullOrWhiteSpace(xpath) && (section == "content" || section == "settings"))
+                if (!string.IsNullOrWhiteSpace(xpath) && section == "content")
 				{
 					xpath = xpath.Replace("$currentPage",
 						string.Format("//*[@id={0} and @isDoc]", id)).Replace("$parentPage",

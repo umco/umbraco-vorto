@@ -8,9 +8,7 @@
     'Our.Umbraco.Resources.Vorto.vortoResources',
     'Our.Umbraco.Services.Vorto.vortoLocalStorageService',
     function ($scope, $rootScope, appState, editorState, formHelper, umbPropEditorHelper, vortoResources, localStorageService) {
-
-        var currentSection = appState.getSectionState("currentSection");
-
+			
         // Get node context
         // DTGE/NC expose the context on the scope
         // to avoid overwriting the editorState
@@ -295,6 +293,21 @@
             }
         }
 
+        var getCurrentSection = function() {
+        	var currentSection = appState.getSectionState("currentSection");
+
+        	if (currentSection === "settings") {
+        		if (window.location.hash.match(new RegExp("mediaTypes"))) {
+        			currentSection = "media";
+        		}
+        		else if (window.location.hash.match(new RegExp("documentTypes"))) {
+        			currentSection = "content";
+        		}
+        	}
+
+	        return currentSection;
+        }
+
         // Load the datatype
         vortoResources.getDataTypeById($scope.model.config.dataType.guid).then(function (dataType) {
 
@@ -309,6 +322,8 @@
 
         	// Get the content type alias
             var contentTypeAlias = nodeContext.contentTypeAlias || nodeContext.alias;
+
+						var currentSection = getCurrentSection();
 
         	// Get the current properties datatype
             vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias).then(function (dataType2) {

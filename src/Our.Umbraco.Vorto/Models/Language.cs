@@ -18,5 +18,8 @@ namespace Our.Umbraco.Vorto.Models
 
         [JsonProperty("isRightToLeft")]
         public bool IsRightToLeft { get; set; }
+
+        [JsonProperty("isReadOnly")]
+        public bool IsReadOnly { get; set; }
 	}
 }

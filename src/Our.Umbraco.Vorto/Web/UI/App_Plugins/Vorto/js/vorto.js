@@ -380,6 +380,10 @@ angular.module("umbraco").controller("Our.Umbraco.PreValueEditors.Vorto.language
 angular.module("umbraco.directives").directive('vortoProperty',
     function ($compile, $http, umbPropEditorHelper, $timeout, $rootScope, $q) {
 
+        var setElementReadOnly = function (element) {
+            element.find('input').attr('readonly', 'readonly');
+        }
+
         var link = function (scope, element, attrs, ctrl) {
             scope[ctrl.$name] = ctrl;
 
@@ -409,6 +413,12 @@ angular.module("umbraco.directives").directive('vortoProperty',
             scope.$on('$destroy', function () {
                 unsubscribe();
             });
+
+            scope.vortoPropertyLoaded = function () {
+                if (scope.isReadOnly) {
+                    setElementReadOnly(element);
+                }
+            }
         };
 
         return {
@@ -416,13 +426,14 @@ angular.module("umbraco.directives").directive('vortoProperty',
             restrict: "E",
             rep1ace: true,
             link: link,
-            template: '<div ng-include="propertyEditorView"></div>', 
+            template: '<div ng-include="propertyEditorView" onload="vortoPropertyLoaded()"></div>',
             scope: {
                 propertyEditorView: '=view',
                 config: '=',
                 language: '=',
                 propertyAlias: '=',
-                value: '='
+                value: '=',
+                isReadOnly: '='
             }
         };
     });

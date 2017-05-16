@@ -93,7 +93,7 @@ namespace Our.Umbraco.Vorto.Extensions
                             targetDataType.PropertyEditorAlias,
                             content.ContentType);
 
-                        var inPreviewMode = UmbracoContext.Current.InPreviewMode;
+                        var inPreviewMode = UmbracoContext.Current != null ? UmbracoContext.Current.InPreviewMode : false;
 
                         // Try convert data to source
                         // We try this first as the value is stored as JSON not

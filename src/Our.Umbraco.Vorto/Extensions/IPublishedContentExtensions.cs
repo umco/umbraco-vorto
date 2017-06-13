@@ -1,4 +1,7 @@
-﻿using System.Threading;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
@@ -17,20 +20,38 @@ namespace Our.Umbraco.Vorto.Extensions
 	    {
             if (content.HasValue(propertyAlias))
             {
-                var prop = content.GetProperty(propertyAlias);
-                var vortoModel = prop.Value as VortoValue;
+                object dataValue = content.Properties
+                    .First(p => p.PropertyTypeAlias.InvariantEquals(propertyAlias))
+                    .DataValue;
+
+                if (dataValue == null)
+                {
+                    return false;
+                }
+
+                VortoValue vortoModel;
+
+                try
+                {
+                    vortoModel = JsonConvert.DeserializeObject<VortoValue>(dataValue.ToString());
+                }
+                catch
+                {
+                    return false;
+                }
+
                 if (vortoModel != null && vortoModel.Values != null)
                 {
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                    if (!bestMatchCultureName.IsNullOrWhiteSpace() 
+                    if (!bestMatchCultureName.IsNullOrWhiteSpace()
                         && vortoModel.Values.ContainsKey(bestMatchCultureName)
                         && vortoModel.Values[bestMatchCultureName] != null
-                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace()) 
+                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
                         return true;
                 }
             }
 
-            return recursive && content.Parent != null 
+            return recursive && content.Parent != null
                 ? content.Parent.DoInnerHasVortoValue(propertyAlias, cultureName, recursive)
                 : false;
 	    }
@@ -48,7 +69,7 @@ namespace Our.Umbraco.Vorto.Extensions
 		}
 
         public static bool HasVortoValue(this IPublishedContent content, string propertyAlias,
-            string cultureName = null, bool recursive = false, 
+            string cultureName = null, bool recursive = false,
             string fallbackCultureName = null)
         {
             var hasValue = content.DoHasVortoValue(propertyAlias, cultureName, recursive);
@@ -82,7 +103,7 @@ namespace Our.Umbraco.Vorto.Extensions
                         // Get target datatype
                         var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
 
-                        // Umbraco has the concept of a IPropertyEditorValueConverter which it 
+                        // Umbraco has the concept of a IPropertyEditorValueConverter which it
                         // also queries for property resolvers. However I'm not sure what these
                         // are for, nor can I find any implementations in core, so am currently
                         // just ignoring these when looking up converters.
@@ -144,7 +165,7 @@ namespace Our.Umbraco.Vorto.Extensions
             var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive, default(T));
             if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
                 result = content.DoGetVortoValue<T>(propertyAlias, fallbackCultureName, recursive, defaultValue);
-             
+
             return result;
         }
 

@@ -157,7 +157,7 @@ namespace Our.Umbraco.Vorto.Extensions
         /// <param name="recursive">Whether to recursively travel up the content tree looking for the value</param>
         /// <param name="defaultValue">The default value to return if none is found</param>
         /// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
-        /// <returns>The <see cref="T"/> value</returns>
+        /// <returns>The <typeparamref name="T"/> value</returns>
         public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T), string fallbackCultureName = null)
         {

@@ -10,24 +10,32 @@ namespace Our.Umbraco.Vorto.Extensions
 {
 	public static class IPublishedContentExtensions
 	{
-		#region HasValue
+        #region HasValue
+
+        private static VortoValue GetVortoValue(this IPublishedContent content, string propertyAlias)
+        {
+            if (content.HasValue(propertyAlias))
+            {
+                var prop = content.GetProperty(propertyAlias);
+                if (prop.Value is VortoValue vortoModel) return vortoModel;
+            }
+
+            return null;
+        }
 
         private static bool DoInnerHasVortoValue(this IPublishedContent content, string propertyAlias,
             string cultureName = null, bool recursive = false)
 	    {
-            if (content.HasValue(propertyAlias))
+            var vortoModel = GetVortoValue(content, propertyAlias);
+
+            if (vortoModel != null && vortoModel.Values != null)
             {
-                var prop = content.GetProperty(propertyAlias);
-                var vortoModel = prop.Value as VortoValue;
-                if (vortoModel != null && vortoModel.Values != null)
-                {
-                    var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                    if (!bestMatchCultureName.IsNullOrWhiteSpace() 
-                        && vortoModel.Values.ContainsKey(bestMatchCultureName)
-                        && vortoModel.Values[bestMatchCultureName] != null
-                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace()) 
-                        return true;
-                }
+                var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
+                if (!bestMatchCultureName.IsNullOrWhiteSpace()
+                    && vortoModel.Values.ContainsKey(bestMatchCultureName)
+                    && vortoModel.Values[bestMatchCultureName] != null
+                    && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
+                    return true;
             }
 
             return recursive && content.Parent != null 
@@ -47,6 +55,14 @@ namespace Our.Umbraco.Vorto.Extensions
 		    return content.DoInnerHasVortoValue(propertyAlias, cultureName, recursive);
 		}
 
+        /// <summary>
+        /// Determines if the given property alias has a vorto value.
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="propertyAlias"></param>
+        /// <param name="cultureName"></param>
+        /// <param name="recursive">A value indicating whether to navigate the tree upwards until a property with a value is found.</param>
+        /// <param name="fallbackCultureName"></param>
         public static bool HasVortoValue(this IPublishedContent content, string propertyAlias,
             string cultureName = null, bool recursive = false, 
             string fallbackCultureName = null)
@@ -57,9 +73,19 @@ namespace Our.Umbraco.Vorto.Extensions
             return hasValue;
         }
 
-		#endregion
+        /// <summary>
+        /// Determines if the given property is of type <see cref="VortoValue"/>.
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="propertyAlias"></param>
+        public static bool IsVortoProperty(this IPublishedContent content, string propertyAlias)
+        {
+            return GetVortoValue(content, propertyAlias) != null ? true : false;
+        }
 
-		#region GetValue
+        #endregion
+
+        #region GetValue
 
         private static T DoInnerGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T))
@@ -98,7 +124,7 @@ namespace Our.Umbraco.Vorto.Extensions
                         // Try convert data to source
                         // We try this first as the value is stored as JSON not
                         // as XML as would occur in the XML cache as in the act
-                        // of concerting to XML this would ordinarily get called
+                        // of converting to XML this would ordinarily get called
                         // but with JSON it doesn't, so we try this first
                         var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
                         if (converted1 is T) return (T)converted1;

@@ -12,21 +12,10 @@ namespace Our.Umbraco.Vorto.Extensions
 	{
         #region HasValue
 
-        private static VortoValue GetVortoValue(this IPublishedContent content, string propertyAlias)
-        {
-            if (content.HasValue(propertyAlias))
-            {
-                var prop = content.GetProperty(propertyAlias);
-                if (prop.Value is VortoValue vortoModel) return vortoModel;
-            }
-
-            return null;
-        }
-
         private static bool DoInnerHasVortoValue(this IPublishedContent content, string propertyAlias,
             string cultureName = null, bool recursive = false)
 	    {
-            var vortoModel = GetVortoValue(content, propertyAlias);
+            var vortoModel = content.GetVortoModel(propertyAlias);
 
             if (vortoModel != null && vortoModel.Values != null)
             {
@@ -80,73 +69,81 @@ namespace Our.Umbraco.Vorto.Extensions
         /// <param name="propertyAlias"></param>
         public static bool IsVortoProperty(this IPublishedContent content, string propertyAlias)
         {
-            return GetVortoValue(content, propertyAlias) != null ? true : false;
+            return content.GetVortoModel(propertyAlias) != null ? true : false;
         }
 
         #endregion
 
         #region GetValue
 
-        private static T DoInnerGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
-            bool recursive = false, T defaultValue = default(T))
+        private static VortoValue GetVortoModel(this IPublishedContent content, string propertyAlias)
         {
             if (content.HasValue(propertyAlias))
             {
                 var prop = content.GetProperty(propertyAlias);
-                var vortoModel = prop.Value as VortoValue;
-                if (vortoModel != null && vortoModel.Values != null)
+                if (prop.Value is VortoValue vortoModel) return vortoModel;
+            }
+
+            return null;
+        }
+
+        private static T DoInnerGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
+            bool recursive = false, T defaultValue = default(T))
+        {
+            var vortoModel = content.GetVortoModel(propertyAlias);
+
+            if (vortoModel != null && vortoModel.Values != null)
+            {
+                // Get the serialized value
+                var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
+                if (!bestMatchCultureName.IsNullOrWhiteSpace()
+                    && vortoModel.Values.ContainsKey(bestMatchCultureName)
+                    && vortoModel.Values[bestMatchCultureName] != null
+                    && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
                 {
-                    // Get the serialized value
-                    var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                    if (!bestMatchCultureName.IsNullOrWhiteSpace()
-                        && vortoModel.Values.ContainsKey(bestMatchCultureName)
-                        && vortoModel.Values[bestMatchCultureName] != null
-                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
-                    {
-                        var value = vortoModel.Values[bestMatchCultureName];
+                    var value = vortoModel.Values[bestMatchCultureName];
 
-                        // Get target datatype
-                        var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
+                    // Get target datatype
+                    var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
 
-                        // Umbraco has the concept of a IPropertyEditorValueConverter which it 
-                        // also queries for property resolvers. However I'm not sure what these
-                        // are for, nor can I find any implementations in core, so am currently
-                        // just ignoring these when looking up converters.
-                        // NB: IPropertyEditorValueConverter not to be confused with
-                        // IPropertyValueConverter which are the ones most people are creating
-                        var properyType = CreateDummyPropertyType(
-                            targetDataType.Id,
-                            targetDataType.PropertyEditorAlias,
-                            content.ContentType);
+                    // Umbraco has the concept of a IPropertyEditorValueConverter which it 
+                    // also queries for property resolvers. However I'm not sure what these
+                    // are for, nor can I find any implementations in core, so am currently
+                    // just ignoring these when looking up converters.
+                    // NB: IPropertyEditorValueConverter not to be confused with
+                    // IPropertyValueConverter which are the ones most people are creating
+                    var properyType = CreateDummyPropertyType(
+                        targetDataType.Id,
+                        targetDataType.PropertyEditorAlias,
+                        content.ContentType);
 
-                        var inPreviewMode = UmbracoContext.Current.InPreviewMode;
+                    var inPreviewMode = UmbracoContext.Current.InPreviewMode;
 
-                        // Try convert data to source
-                        // We try this first as the value is stored as JSON not
-                        // as XML as would occur in the XML cache as in the act
-                        // of converting to XML this would ordinarily get called
-                        // but with JSON it doesn't, so we try this first
-                        var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
-                        if (converted1 is T) return (T)converted1;
+                    // Try convert data to source
+                    // We try this first as the value is stored as JSON not
+                    // as XML as would occur in the XML cache as in the act
+                    // of converting to XML this would ordinarily get called
+                    // but with JSON it doesn't, so we try this first
+                    var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
+                    if (converted1 is T) return (T)converted1;
 
-                        var convertAttempt = converted1.TryConvertTo<T>();
-                        if (convertAttempt.Success) return convertAttempt.Result;
+                    var convertAttempt = converted1.TryConvertTo<T>();
+                    if (convertAttempt.Success) return convertAttempt.Result;
 
-                        // Try convert source to object
-                        // If the source value isn't right, try converting to object
-                        var converted2 = properyType.ConvertSourceToObject(converted1, inPreviewMode);
-                        if (converted2 is T) return (T)converted2;
+                    // Try convert source to object
+                    // If the source value isn't right, try converting to object
+                    var converted2 = properyType.ConvertSourceToObject(converted1, inPreviewMode);
+                    if (converted2 is T) return (T)converted2;
 
-                        convertAttempt = converted2.TryConvertTo<T>();
-                        if (convertAttempt.Success) return convertAttempt.Result;
+                    convertAttempt = converted2.TryConvertTo<T>();
+                    if (convertAttempt.Success) return convertAttempt.Result;
 
-                        // Try just converting
-                        convertAttempt = value.TryConvertTo<T>();
-                        if (convertAttempt.Success) return convertAttempt.Result;
+                    // Try just converting
+                    convertAttempt = value.TryConvertTo<T>();
+                    if (convertAttempt.Success) return convertAttempt.Result;
 
-                        // Still not right type so return default value
-                        return defaultValue;
-                    }
+                    // Still not right type so return default value
+                    return defaultValue;
                 }
             }
 

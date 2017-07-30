@@ -81,7 +81,7 @@ namespace Our.Umbraco.Vorto.Extensions
             if (content.HasValue(propertyAlias))
             {
                 var prop = content.GetProperty(propertyAlias);
-                if (prop.Value is VortoValue vortoModel) return vortoModel;
+                if (prop.Value is VortoValue) return prop.Value as VortoValue;
             }
 
             return null;

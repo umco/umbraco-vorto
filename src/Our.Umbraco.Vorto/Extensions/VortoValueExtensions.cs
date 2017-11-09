@@ -8,7 +8,7 @@ namespace Our.Umbraco.Vorto.Extensions
         public static string FindBestMatchCulture(this VortoValue value, string cultureName)
         {
             // Check for actual values
-            if (value.Values == null) 
+            if (value.Values == null)
                 return string.Empty;
 
             // Check for exact match

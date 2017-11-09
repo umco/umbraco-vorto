@@ -19,10 +19,11 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
     [PropertyEditorAsset(ClientDependencyType.Javascript, "~/App_Plugins/Vorto/js/jquery.hoverIntent.minified.js", Priority = 1)]
     [PropertyEditorAsset(ClientDependencyType.Javascript, "~/App_Plugins/Vorto/js/vorto.js", Priority = 2)]
     [PropertyEditorAsset(ClientDependencyType.Css, "~/App_Plugins/Vorto/css/vorto.css", Priority = 2)]
-    [PropertyEditor("Our.Umbraco.Vorto", "Vorto", "~/App_Plugins/Vorto/Views/vorto.html",
-		ValueType = "JSON")]
+    [PropertyEditor(PropertyEditorAlias, "Vorto", "~/App_Plugins/Vorto/Views/vorto.html", ValueType = "JSON")]
 	public class VortoPropertyEditor : PropertyEditor
 	{
+        public const string PropertyEditorAlias = "Our.Umbraco.Vorto";
+
 		private IDictionary<string, object> _defaultPreValues;
 		public override IDictionary<string, object> DefaultPreValues
 		{
@@ -71,9 +72,12 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
             [PreValueField("rtlBehaviour", "RTL Behaviour", "~/App_Plugins/Vorto/views/vorto.rtlBehaviourPicker.html", Description = "[EXPERIMENTAL] Select how Vorto should handle Right-to-left languages. This feature is experimental so depending on the property being wrapped, results may vary.")]
             public string RtlBehaviour { get; set; }
 
+            [PreValueField("showFilledLanguages", "Highlight Languages With Content", "boolean", Description = "Show a tick-mark next to the language name when there is content for that language.")]
+            public bool ShowFilledLanguages { get; set; }
+
             [PreValueField("hideLabel", "Hide Label", "boolean", Description = "Hide the Umbraco property title and description, making the Vorto span the entire page width")]
             public bool HideLabel { get; set; }
-		}
+        }
 
 		#endregion
 
@@ -107,11 +111,14 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
 				    if (value.Values != null)
 				    {
-					if(value.DtdGuid == Guid.Empty)
-					{
-						var vortoDtd = dataTypeService.GetDataTypeDefinitionById(propertyType.DataTypeDefinitionId);
-						value.DtdGuid = vortoDtd.Key;
-					}
+                        // If the DTD Guid isn't set (probably because someone has made the value manually)
+                        // then do a lookup and store it
+					    if(value.DtdGuid == Guid.Empty)
+					    {
+						    var vortoDtd = dataTypeService.GetDataTypeDefinitionById(propertyType.DataTypeDefinitionId);
+						    value.DtdGuid = vortoDtd.Key;
+					    }
+
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
 				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
 				        var propType = new PropertyType(dtd);
@@ -186,8 +193,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				    if (value.Values != null)
 				    {
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-				        var preValues =
-				            ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
+				        var preValues = ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
 				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
 
 				        var keys = value.Values.Keys.ToArray();

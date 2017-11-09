@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
+using Our.Umbraco.Vorto.Web.PropertyEditors;
 using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.PublishedContent;
@@ -13,17 +12,15 @@ namespace Our.Umbraco.Vorto.Extensions
 {
 	public static class IPublishedContentExtensions
 	{
-		#region HasValue
+        #region HasValue
 
         private static bool DoInnerHasVortoValue(this IPublishedContent content, string propertyAlias,
             string cultureName = null, bool recursive = false)
 	    {
             if (content.HasValue(propertyAlias))
             {
-                object dataValue = content.Properties
-                    .First(p => p.PropertyTypeAlias.InvariantEquals(propertyAlias))
-                    .DataValue;
-
+                var prop = content.GetProperty(propertyAlias);
+                var dataValue = prop.DataValue;
                 if (dataValue == null)
                 {
                     return false;
@@ -33,6 +30,9 @@ namespace Our.Umbraco.Vorto.Extensions
 
                 try
                 {
+                    // We purposfully parse the raw data value ourselves bypassing the property
+                    // value converters so that we don't require an UmbracoContext during a
+                    // HasValue check. As we won't actually use the value, this is ok here. 
                     vortoModel = JsonConvert.DeserializeObject<VortoValue>(dataValue.ToString());
                 }
                 catch
@@ -40,7 +40,7 @@ namespace Our.Umbraco.Vorto.Extensions
                     return false;
                 }
 
-                if (vortoModel != null && vortoModel.Values != null)
+                if (vortoModel?.Values != null)
                 {
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
                     if (!bestMatchCultureName.IsNullOrWhiteSpace()
@@ -87,70 +87,67 @@ namespace Our.Umbraco.Vorto.Extensions
             return hasValue;
         }
 
-		#endregion
+        #endregion
 
-		#region GetValue
+        #region GetValue
 
         private static T DoInnerGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T))
         {
-            if (content.HasValue(propertyAlias))
+            var prop = content.GetProperty(propertyAlias);
+            var vortoModel = prop.Value as VortoValue;
+            if (vortoModel?.Values != null)
             {
-                var prop = content.GetProperty(propertyAlias);
-                var vortoModel = prop.Value as VortoValue;
-                if (vortoModel != null && vortoModel.Values != null)
+                // Get the serialized value
+                var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
+                if (!bestMatchCultureName.IsNullOrWhiteSpace()
+                    && vortoModel.Values.ContainsKey(bestMatchCultureName)
+                    && vortoModel.Values[bestMatchCultureName] != null
+                    && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
                 {
-                    // Get the serialized value
-                    var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                    if (!bestMatchCultureName.IsNullOrWhiteSpace()
-                        && vortoModel.Values.ContainsKey(bestMatchCultureName)
-                        && vortoModel.Values[bestMatchCultureName] != null
-                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
-                    {
-                        var value = vortoModel.Values[bestMatchCultureName];
+                    var value = vortoModel.Values[bestMatchCultureName];
 
-                        // Get target datatype
-                        var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
+                    // Get target datatype
+                    var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
 
-                        // Umbraco has the concept of a IPropertyEditorValueConverter which it
-                        // also queries for property resolvers. However I'm not sure what these
-                        // are for, nor can I find any implementations in core, so am currently
-                        // just ignoring these when looking up converters.
-                        // NB: IPropertyEditorValueConverter not to be confused with
-                        // IPropertyValueConverter which are the ones most people are creating
-                        var properyType = CreateDummyPropertyType(
-                            targetDataType.Id,
-                            targetDataType.PropertyEditorAlias,
-                            content.ContentType);
+                    // Umbraco has the concept of a IPropertyEditorValueConverter which it 
+                    // also queries for property resolvers. However I'm not sure what these
+                    // are for, nor can I find any implementations in core, so am currently
+                    // just ignoring these when looking up converters.
+                    // NB: IPropertyEditorValueConverter not to be confused with
+                    // IPropertyValueConverter which are the ones most people are creating
+                    var properyType = CreateDummyPropertyType(
+                        targetDataType.Id,
+                        targetDataType.PropertyEditorAlias,
+                        content.ContentType);
 
-                        var inPreviewMode = UmbracoContext.Current != null ? UmbracoContext.Current.InPreviewMode : false;
+                    var inPreviewMode = UmbracoContext.Current != null && UmbracoContext.Current.InPreviewMode;
 
-                        // Try convert data to source
-                        // We try this first as the value is stored as JSON not
-                        // as XML as would occur in the XML cache as in the act
-                        // of concerting to XML this would ordinarily get called
-                        // but with JSON it doesn't, so we try this first
-                        var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
-                        if (converted1 is T) return (T)converted1;
+                    // Try convert data to source
+                    // We try this first as the value is stored as JSON not
+                    // as XML as would occur in the XML cache as in the act
+                    // of converting to XML this would ordinarily get called
+                    // but with JSON it doesn't, so we try this first
+                    var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
+                    if (converted1 is T) return (T)converted1;
 
-                        var convertAttempt = converted1.TryConvertTo<T>();
-                        if (convertAttempt.Success) return convertAttempt.Result;
+                    var convertAttempt = converted1.TryConvertTo<T>();
+                    if (convertAttempt.Success) return convertAttempt.Result;
 
-                        // Try convert source to object
-                        // If the source value isn't right, try converting to object
-                        var converted2 = properyType.ConvertSourceToObject(converted1, inPreviewMode);
-                        if (converted2 is T) return (T)converted2;
+                    // Try convert source to object
+                    // If the source value isn't right, try converting to object
+                    var converted2 = properyType.ConvertSourceToObject(converted1, inPreviewMode);
+                    if (converted2 is T) return (T)converted2;
 
-                        convertAttempt = converted2.TryConvertTo<T>();
-                        if (convertAttempt.Success) return convertAttempt.Result;
+                    convertAttempt = converted2.TryConvertTo<T>();
+                    if (convertAttempt.Success) return convertAttempt.Result;
 
-                        // Try just converting
-                        convertAttempt = value.TryConvertTo<T>();
-                        if (convertAttempt.Success) return convertAttempt.Result;
+                    // Try just converting
+                    convertAttempt = value.TryConvertTo<T>();
+                    if (convertAttempt.Success) return convertAttempt.Result;
 
-                        // Still not right type so return default value
-                        return defaultValue;
-                    }
+                    // Still not right type so return default value
+                    return defaultValue;
                 }
             }
 
@@ -206,9 +203,24 @@ namespace Our.Umbraco.Vorto.Extensions
             return content.GetVortoValue<object>(propertyAlias, cultureName, recursive, defaultValue, fallbackCultureName);
         }
 
-	    #endregion
+        #endregion
 
-		private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias, PublishedContentType contentType)
+        #region IsVortoProperty
+
+        /// <summary>
+        /// Determines if the given property is a Vorto based property.
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="propertyAlias"></param>
+        public static bool IsVortoProperty(this IPublishedContent content, string propertyAlias)
+        {
+            var propertyType = content.ContentType?.GetPropertyType(propertyAlias);
+            return propertyType?.PropertyEditorAlias.InvariantEquals(VortoPropertyEditor.PropertyEditorAlias) ?? false;
+        }
+
+        #endregion
+
+        private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias, PublishedContentType contentType)
 		{
             return new PublishedPropertyType(contentType,
 				new PropertyType(new DataTypeDefinition(-1, propertyEditorAlias)

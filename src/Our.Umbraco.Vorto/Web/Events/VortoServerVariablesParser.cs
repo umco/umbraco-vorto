@@ -26,8 +26,7 @@ namespace Our.Umbraco.Vorto.Web.Events
             var mainDictionary = new Dictionary<string, object>
             {
                 {
-                    "apiBaseUrl",
-                    urlHelper.GetUmbracoApiServiceBaseUrl<VortoApiController>(
+                    "apiBaseUrl", urlHelper.GetUmbracoApiServiceBaseUrl<VortoApiController>(
                         controller => controller.GetInstalledLanguages())
                 }
             };

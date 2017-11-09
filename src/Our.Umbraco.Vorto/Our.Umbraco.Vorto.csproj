@@ -267,8 +267,8 @@ REM #################################################
 
 IF %25ComputerName%25 == MBP13-PC-BC (
 IF NOT "$(SolutionDir)" == "*Undefined*" (
-xcopy /s /y "$(TargetPath)" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.4.2\bin"
-xcopy /s /y "$(TargetDir)Our.Umbraco.Vorto.pdb" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.4.2\bin"
+xcopy /s /y "$(TargetPath)" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.4.0\bin"
+xcopy /s /y "$(TargetDir)Our.Umbraco.Vorto.pdb" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.4.0\bin"
 xcopy /s /y "$(ProjectDir)Web\UI\*" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.4.0"
 )
 )</PostBuildEvent>

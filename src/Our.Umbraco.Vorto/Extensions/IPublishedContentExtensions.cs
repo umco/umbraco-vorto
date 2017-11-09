@@ -40,7 +40,7 @@ namespace Our.Umbraco.Vorto.Extensions
                     return false;
                 }
 
-                if (vortoModel?.Values != null)
+                if (vortoModel != null && vortoModel.Values != null)
                 {
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
                     if (!bestMatchCultureName.IsNullOrWhiteSpace()

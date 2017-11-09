@@ -1,4 +1,7 @@
-﻿using System.Threading;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
@@ -17,9 +20,27 @@ namespace Our.Umbraco.Vorto.Extensions
 	    {
             if (content.HasValue(propertyAlias))
             {
-                var prop = content.GetProperty(propertyAlias);
-                var vortoModel = prop.Value as VortoValue;
-                if (vortoModel?.Values != null)
+                object dataValue = content.Properties
+                    .First(p => p.PropertyTypeAlias.InvariantEquals(propertyAlias))
+                    .DataValue;
+
+                if (dataValue == null)
+                {
+                    return false;
+                }
+
+                VortoValue vortoModel;
+
+                try
+                {
+                    vortoModel = JsonConvert.DeserializeObject<VortoValue>(dataValue.ToString());
+                }
+                catch
+                {
+                    return false;
+                }
+
+                if (vortoModel != null && vortoModel.Values != null)
                 {
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
                     if (!bestMatchCultureName.IsNullOrWhiteSpace()

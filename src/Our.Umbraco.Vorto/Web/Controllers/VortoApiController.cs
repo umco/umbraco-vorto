@@ -100,19 +100,20 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			if (languageSource == "inuse")
 			{
                 var currentNode = id != 0 ? ApplicationContext.Services.ContentService.GetById(id) : null;
+                var currentNodeIsUnpublished = currentNode != null && currentNode.Published;
 
                 //trying to add/publish a home node, so no "in use" languages have been defined/are accessible - display all installed in the interim
-                var canAccessInUseLanguages = (currentNode == null || !currentNode.Published) && parentId == -1;
+                var currentNodeIsUnpublishedRootNode = currentNodeIsUnpublished && parentId == -1;
 
                 var xpath = preValues.ContainsKey("xpath") ? preValues["xpath"].Value : "";
 
                 // Grab languages by xpath (only if in content section)
-                if (canAccessInUseLanguages && !string.IsNullOrWhiteSpace(xpath) && section == "content")
+                if (!currentNodeIsUnpublishedRootNode && !string.IsNullOrWhiteSpace(xpath) && section == "content")
                 {
                     xpath = xpath.Replace("$currentPage",
                         string.Format("//*[@id={0} and @isDoc]", id)).Replace("$parentPage",
                             string.Format("//*[@id={0} and @isDoc]", parentId)).Replace("$ancestorOrSelf",
-                                string.Format("//*[@id={0} and @isDoc]", currentNode != null && currentNode.Published ? id : parentId));
+                                string.Format("//*[@id={0} and @isDoc]", currentNodeIsUnpublished ? parentId : id));
 
                     // Lookup language nodes
                     var nodeIds = uQuery.GetNodesByXPath(xpath).Select(x => x.Id).ToArray();

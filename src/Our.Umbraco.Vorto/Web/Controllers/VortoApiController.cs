@@ -99,8 +99,8 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 
 			if (languageSource == "inuse")
 			{
-                var currentNode = id != 0 ? ApplicationContext.Services.ContentService.GetById(id) : null;
-                var currentNodeIsUnpublished = currentNode != null && currentNode.Published;
+                var currentNode = id != 0 ? Umbraco.TypedContent(id) : null;
+                var currentNodeIsUnpublished = currentNode == null;
 
                 //trying to add/publish a home node, so no "in use" languages have been defined/are accessible - display all installed in the interim
                 var currentNodeIsUnpublishedRootNode = currentNodeIsUnpublished && parentId == -1;

@@ -1,4 +1,7 @@
-﻿using System.Threading;
+﻿using System;
+using System.Linq;
+using System.Threading;
+using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
@@ -19,15 +22,38 @@ namespace Our.Umbraco.Vorto.Extensions
 
             if (vortoModel != null && vortoModel.Values != null)
             {
-                var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                if (!bestMatchCultureName.IsNullOrWhiteSpace()
-                    && vortoModel.Values.ContainsKey(bestMatchCultureName)
-                    && vortoModel.Values[bestMatchCultureName] != null
-                    && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
-                    return true;
+                object dataValue = content.Properties
+                    .First(p => p.PropertyTypeAlias.InvariantEquals(propertyAlias))
+                    .DataValue;
+
+                if (dataValue == null)
+                {
+                    return false;
+                }
+
+                VortoValue vortoModel;
+
+                try
+                {
+                    vortoModel = JsonConvert.DeserializeObject<VortoValue>(dataValue.ToString());
+                }
+                catch
+                {
+                    return false;
+                }
+
+                if (vortoModel != null && vortoModel.Values != null)
+                {
+                    var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
+                    if (!bestMatchCultureName.IsNullOrWhiteSpace()
+                        && vortoModel.Values.ContainsKey(bestMatchCultureName)
+                        && vortoModel.Values[bestMatchCultureName] != null
+                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
+                        return true;
+                }
             }
 
-            return recursive && content.Parent != null 
+            return recursive && content.Parent != null
                 ? content.Parent.DoInnerHasVortoValue(propertyAlias, cultureName, recursive)
                 : false;
 	    }
@@ -45,15 +71,16 @@ namespace Our.Umbraco.Vorto.Extensions
 		}
 
         /// <summary>
-        /// Determines if the given property alias has a vorto value.
+        /// Returns a value indicating whether the given content property has a Vorto value
         /// </summary>
-        /// <param name="content"></param>
-        /// <param name="propertyAlias"></param>
-        /// <param name="cultureName"></param>
-        /// <param name="recursive">A value indicating whether to navigate the tree upwards until a property with a value is found.</param>
-        /// <param name="fallbackCultureName"></param>
+        /// <param name="content">The cached content</param>
+        /// <param name="propertyAlias">The property alias</param>
+        /// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2</param>
+        /// <param name="recursive">Whether to recursively travel up the content tree looking for the value</param>
+        /// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
+        /// <returns>The <see cref="bool"/></returns>
         public static bool HasVortoValue(this IPublishedContent content, string propertyAlias,
-            string cultureName = null, bool recursive = false, 
+            string cultureName = null, bool recursive = false,
             string fallbackCultureName = null)
         {
             var hasValue = content.DoHasVortoValue(propertyAlias, cultureName, recursive);
@@ -117,7 +144,7 @@ namespace Our.Umbraco.Vorto.Extensions
                         targetDataType.PropertyEditorAlias,
                         content.ContentType);
 
-                    var inPreviewMode = UmbracoContext.Current.InPreviewMode;
+                    var inPreviewMode = UmbracoContext.Current != null && UmbracoContext.Current.InPreviewMode;
 
                     // Try convert data to source
                     // We try this first as the value is stored as JSON not
@@ -161,16 +188,37 @@ namespace Our.Umbraco.Vorto.Extensions
 		    return content.DoInnerGetVortoValue(propertyAlias, cultureName, recursive, defaultValue);
 		}
 
+        /// <summary>
+        /// Gets the Vorto value for the given content property as the given type.
+        /// </summary>
+        /// <typeparam name="T">The type of value to return</typeparam>
+        /// <param name="content">The cached content</param>
+        /// <param name="propertyAlias">The property alias</param>
+        /// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2</param>
+        /// <param name="recursive">Whether to recursively travel up the content tree looking for the value</param>
+        /// <param name="defaultValue">The default value to return if none is found</param>
+        /// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
+        /// <returns>The <typeparamref name="T"/> value</returns>
         public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T), string fallbackCultureName = null)
         {
             var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive, default(T));
             if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
                 result = content.DoGetVortoValue<T>(propertyAlias, fallbackCultureName, recursive, defaultValue);
-             
+
             return result;
         }
 
+	    /// <summary>
+	    /// Gets the Vorto value for the given content property.
+	    /// </summary>
+	    /// <param name="content">The cached content</param>
+	    /// <param name="propertyAlias">The property alias</param>
+	    /// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2</param>
+	    /// <param name="recursive">Whether to recursively travel up the content tree looking for the value</param>
+	    /// <param name="defaultValue">The default value to return if none is found</param>
+	    /// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
+	    /// <returns>The <see cref="object"/> value</returns>
         public static object GetVortoValue(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, object defaultValue = null,
             string fallbackCultureName = null)

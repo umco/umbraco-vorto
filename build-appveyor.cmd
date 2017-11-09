@@ -4,4 +4,4 @@ ECHO APPVEYOR_BUILD_NUMBER : %APPVEYOR_BUILD_NUMBER%
 ECHO APPVEYOR_BUILD_VERSION : %APPVEYOR_BUILD_VERSION%
 
 CALL src\.nuget\NuGet.exe restore src\Our.Umbraco.Vorto\packages.config -PackagesDirectory src\packages
-CALL "%WINDIR%\Microsoft.NET\Framework\v4.0.30319\msbuild.exe" build\package.proj
+CALL "%programfiles(x86)%\MSBuild\14.0\Bin\amd64\MsBuild.exe" build\package.proj

@@ -12,11 +12,10 @@ namespace Our.Umbraco.Vorto
 
 		internal static void CallFilterLanguages(FilterLanguagesEventArgs args)
 		{
-			if (FilterLanguages != null)
-				FilterLanguages(null, args);
+		    FilterLanguages?.Invoke(null, args);
 		}
 
-		#endregion
+	    #endregion
 	}
 
 	#region Event Args

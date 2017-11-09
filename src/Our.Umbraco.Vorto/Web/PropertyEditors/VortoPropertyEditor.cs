@@ -19,10 +19,11 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
     [PropertyEditorAsset(ClientDependencyType.Javascript, "~/App_Plugins/Vorto/js/jquery.hoverIntent.minified.js", Priority = 1)]
     [PropertyEditorAsset(ClientDependencyType.Javascript, "~/App_Plugins/Vorto/js/vorto.js", Priority = 2)]
     [PropertyEditorAsset(ClientDependencyType.Css, "~/App_Plugins/Vorto/css/vorto.css", Priority = 2)]
-    [PropertyEditor("Our.Umbraco.Vorto", "Vorto", "~/App_Plugins/Vorto/Views/vorto.html",
-		ValueType = "JSON")]
+    [PropertyEditor(PropertyEditorAlias, "Vorto", "~/App_Plugins/Vorto/Views/vorto.html", ValueType = "JSON")]
 	public class VortoPropertyEditor : PropertyEditor
 	{
+        public const string PropertyEditorAlias = "Our.Umbraco.Vorto";
+
 		private IDictionary<string, object> _defaultPreValues;
 		public override IDictionary<string, object> DefaultPreValues
 		{
@@ -110,6 +111,14 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
 				    if (value.Values != null)
 				    {
+                        // If the DTD Guid isn't set (probably because someone has made the value manually)
+                        // then do a lookup and store it
+					    if(value.DtdGuid == Guid.Empty)
+					    {
+						    var vortoDtd = dataTypeService.GetDataTypeDefinitionById(propertyType.DataTypeDefinitionId);
+						    value.DtdGuid = vortoDtd.Key;
+					    }
+
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
 				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
 				        var propType = new PropertyType(dtd);
@@ -132,7 +141,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 
                 return base.ConvertDbToString(prop2, propertyType, dataTypeService);
 			}
-
+	
 			public override object ConvertDbToEditor(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
 			{
 				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
@@ -184,8 +193,7 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				    if (value.Values != null)
 				    {
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-				        var preValues =
-				            ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
+				        var preValues = ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
 				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
 
 				        var keys = value.Values.Keys.ToArray();

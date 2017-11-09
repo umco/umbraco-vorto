@@ -5,6 +5,7 @@ using System.Linq;
 using System.Net;
 using System.Threading;
 using System.Web.Http;
+using Our.Umbraco.Vorto.Web.PropertyEditors;
 using umbraco;
 using Umbraco.Core;
 using Umbraco.Core.Models;
@@ -21,7 +22,7 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 		public IEnumerable<object> GetNonVortoDataTypes()
 		{
 			return Services.DataTypeService.GetAllDataTypeDefinitions()
-				.Where(x => x.PropertyEditorAlias != "Our.Umbraco.Vorto")
+				.Where(x => x.PropertyEditorAlias != VortoPropertyEditor.PropertyEditorAlias)
 				.OrderBy(x => x.SortOrder)
 				.Select(x => new
 				{
@@ -98,8 +99,9 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 			{
                 var currentNode = id != 0 ? Umbraco.TypedContent(id) : null;
                 var currentNodeIsUnpublished = currentNode == null;
+                var parentOrSelfId = currentNodeIsUnpublished ? parentId : id;
 
-                //trying to add/publish a home node, so no "in use" languages have been defined/are accessible - display all installed in the interim
+                // trying to add/publish a home node, so no "in use" languages have been defined/are accessible - display all installed in the interim
                 var currentNodeIsUnpublishedRootNode = currentNodeIsUnpublished && parentId == -1;
 
                 var xpath = preValues.ContainsKey("xpath") ? preValues["xpath"].Value : "";
@@ -110,7 +112,7 @@ namespace Our.Umbraco.Vorto.Web.Controllers
                     xpath = xpath.Replace("$currentPage",
                         $"//*[@id={id} and @isDoc]").Replace("$parentPage",
                             $"//*[@id={parentId} and @isDoc]").Replace("$ancestorOrSelf",
-                               $"//*[@id={currentNodeIsUnpublished ? parentId : id} and @isDoc]");
+                               $"//*[@id={parentOrSelfId} and @isDoc]");
 
                     // Lookup language nodes
                     var nodeIds = uQuery.GetNodesByXPath(xpath).Select(x => x.Id).ToArray();

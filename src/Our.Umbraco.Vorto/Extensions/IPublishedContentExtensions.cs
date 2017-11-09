@@ -1,9 +1,8 @@
-﻿using System;
-using System.Linq;
-using System.Threading;
+﻿using System.Threading;
 using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
+using Our.Umbraco.Vorto.Web.PropertyEditors;
 using Umbraco.Core;
 using Umbraco.Core.Models;
 using Umbraco.Core.Models.PublishedContent;
@@ -18,14 +17,10 @@ namespace Our.Umbraco.Vorto.Extensions
         private static bool DoInnerHasVortoValue(this IPublishedContent content, string propertyAlias,
             string cultureName = null, bool recursive = false)
 	    {
-            var vortoModel = content.GetVortoModel(propertyAlias);
-
-            if (vortoModel != null && vortoModel.Values != null)
+            if (content.HasValue(propertyAlias))
             {
-                object dataValue = content.Properties
-                    .First(p => p.PropertyTypeAlias.InvariantEquals(propertyAlias))
-                    .DataValue;
-
+                var prop = content.GetProperty(propertyAlias);
+                var dataValue = prop.DataValue;
                 if (dataValue == null)
                 {
                     return false;
@@ -35,6 +30,9 @@ namespace Our.Umbraco.Vorto.Extensions
 
                 try
                 {
+                    // We purposfully parse the raw data value ourselves bypassing the property
+                    // value converters so that we don't require an UmbracoContext during a
+                    // HasValue check. As we won't actually use the value, this is ok here. 
                     vortoModel = JsonConvert.DeserializeObject<VortoValue>(dataValue.ToString());
                 }
                 catch
@@ -42,7 +40,7 @@ namespace Our.Umbraco.Vorto.Extensions
                     return false;
                 }
 
-                if (vortoModel != null && vortoModel.Values != null)
+                if (vortoModel?.Values != null)
                 {
                     var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
                     if (!bestMatchCultureName.IsNullOrWhiteSpace()
@@ -89,37 +87,16 @@ namespace Our.Umbraco.Vorto.Extensions
             return hasValue;
         }
 
-        /// <summary>
-        /// Determines if the given property is of type <see cref="VortoValue"/>.
-        /// </summary>
-        /// <param name="content"></param>
-        /// <param name="propertyAlias"></param>
-        public static bool IsVortoProperty(this IPublishedContent content, string propertyAlias)
-        {
-            return content.GetVortoModel(propertyAlias) != null ? true : false;
-        }
-
         #endregion
 
         #region GetValue
 
-        private static VortoValue GetVortoModel(this IPublishedContent content, string propertyAlias)
-        {
-            if (content.HasValue(propertyAlias))
-            {
-                var prop = content.GetProperty(propertyAlias);
-                if (prop.Value is VortoValue) return prop.Value as VortoValue;
-            }
-
-            return null;
-        }
-
         private static T DoInnerGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T))
         {
-            var vortoModel = content.GetVortoModel(propertyAlias);
-
-            if (vortoModel != null && vortoModel.Values != null)
+            var prop = content.GetProperty(propertyAlias);
+            var vortoModel = prop.Value as VortoValue;
+            if (vortoModel?.Values != null)
             {
                 // Get the serialized value
                 var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
@@ -226,9 +203,24 @@ namespace Our.Umbraco.Vorto.Extensions
             return content.GetVortoValue<object>(propertyAlias, cultureName, recursive, defaultValue, fallbackCultureName);
         }
 
-	    #endregion
+        #endregion
 
-		private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias, PublishedContentType contentType)
+        #region IsVortoProperty
+
+        /// <summary>
+        /// Determines if the given property is a Vorto based property.
+        /// </summary>
+        /// <param name="content"></param>
+        /// <param name="propertyAlias"></param>
+        public static bool IsVortoProperty(this IPublishedContent content, string propertyAlias)
+        {
+            var propertyType = content.ContentType?.GetPropertyType(propertyAlias);
+            return propertyType?.PropertyEditorAlias.InvariantEquals(VortoPropertyEditor.PropertyEditorAlias) ?? false;
+        }
+
+        #endregion
+
+        private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias, PublishedContentType contentType)
 		{
             return new PublishedPropertyType(contentType,
 				new PropertyType(new DataTypeDefinition(-1, propertyEditorAlias)

@@ -296,6 +296,10 @@
         var getCurrentSection = function() {
         	var currentSection = appState.getSectionState("currentSection");
 
+            // The newer back office now shows a preview of property editors in the doc type editor
+            // so the current section will always be settings. If we are in the settings section
+            // then look for why type of content editor we are and set the current section accordingly.
+            // NB: Member types is normally in the members section so that should actually work.
         	if (currentSection === "settings") {
         		if (window.location.hash.match(new RegExp("mediaTypes"))) {
         			currentSection = "media";
@@ -323,7 +327,8 @@
         	// Get the content type alias
             var contentTypeAlias = nodeContext.contentTypeAlias || nodeContext.alias;
 
-						var currentSection = getCurrentSection();
+            // Work out what section we are in
+			var currentSection = getCurrentSection();
 
         	// Get the current properties datatype
             vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias).then(function (dataType2) {

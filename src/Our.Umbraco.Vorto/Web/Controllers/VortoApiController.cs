@@ -54,10 +54,7 @@ namespace Our.Umbraco.Vorto.Web.Controllers
 		            break;
 		    }
 
-		    if (ct == null)
-		        return null;
-
-			var prop = ct.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
+		    var prop = ct?.CompositionPropertyTypes.SingleOrDefault(x => x.Alias == propertyAlias);
 			if (prop == null)
 				return null;
 
@@ -105,9 +102,9 @@ namespace Our.Umbraco.Vorto.Web.Controllers
                 if (!string.IsNullOrWhiteSpace(xpath) && section == "content")
 				{
 					xpath = xpath.Replace("$currentPage",
-						string.Format("//*[@id={0} and @isDoc]", id)).Replace("$parentPage",
-							string.Format("//*[@id={0} and @isDoc]", parentId)).Replace("$ancestorOrSelf",
-								string.Format("//*[@id={0} and @isDoc]", id != 0 ? id : parentId));
+					    $"//*[@id={id} and @isDoc]").Replace("$parentPage",
+					        $"//*[@id={parentId} and @isDoc]").Replace("$ancestorOrSelf",
+					            $"//*[@id={(id != 0 ? id : parentId)} and @isDoc]");
 
 					// Lookup language nodes
 					var nodeIds = uQuery.GetNodesByXPath(xpath).Select(x => x.Id).ToArray();

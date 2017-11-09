@@ -181,6 +181,9 @@
                 $scope.$broadcast("vortoSyncLanguageValue", { language: $scope.realActiveLanguage.isoCode });
             }
             $scope.realActiveLanguage = $scope.activeLanguage;
+
+            // When the language changes, check for filled in languages again
+            // as the editor may have filled the previous language in
             detectFilledInLanguages();
         });
 

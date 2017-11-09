@@ -7,6 +7,7 @@
                 ng-click="setActiveLanguage(currentLanguage);">
                 <span ng-hide="model.config.displayNativeNames">{{currentLanguage.name}}</span>
                 <span ng-show="model.config.displayNativeNames">{{currentLanguage.nativeName}}</span>
+                <span class="icon icon-check color-green" ng-show="isFilledIn(currentLanguage)"></span>
             </li><!--
                 --><li class="vorto-tabs__item vorto-tabs__item--icon" 
                         ng-class="language.isoCode == realActiveLanguage.isoCode ? 'active' : ''"
@@ -14,6 +15,7 @@
                         ng-click="setActiveLanguage(language);">
                         <span ng-hide="model.config.displayNativeNames">{{language.name}}</span>
                         <span ng-show="model.config.displayNativeNames">{{language.nativeName}}</span>
+                       <span class="icon icon-check color-green" ng-show="isFilledIn(language)"></span>
                         <i class="icon icon-wrong vorto-icon" 
                         ng-click="unpinLanguage(language);$event.stopPropagation();"></i>
                     </li><!--
@@ -25,6 +27,7 @@
                                     ng-click="setCurrentLanguage(language);">
                                     <span ng-hide="model.config.displayNativeNames">{{language.name}}</span>
                                     <span ng-show="model.config.displayNativeNames">{{language.nativeName}}</span>
+                                    <span class="icon icon-check color-green" ng-show="isFilledIn(language)"></span>
                                     <i class="icon icon-pushpin vorto-icon" ng-click="pinLanguage(language);$event.stopPropagation();"
                                         ng-show="isPinnable(language)"></i>
                                 </li>

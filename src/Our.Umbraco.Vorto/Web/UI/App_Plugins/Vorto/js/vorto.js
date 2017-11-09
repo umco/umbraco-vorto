@@ -25,6 +25,7 @@
 
         $scope.languages = [];
         $scope.pinnedLanguages = [];
+        $scope.filledInLanguages = [];
         $scope.$rootScope = $rootScope;
 
         $scope.currentLanguage = undefined;
@@ -35,6 +36,7 @@
         $scope.sync = !_.contains(cookieUnsyncedProps, $scope.model.id);
 
         $scope.model.hideLabel = $scope.model.config.hideLabel == 1;
+        $scope.model.showCheckMark = $scope.model.config.showFilledLanguages == 1;
 
         $scope.property = {
             config: {},
@@ -129,6 +131,14 @@
             }
         };
 
+        $scope.isFilledIn = function (language) {
+            if (!$scope.model.showCheckMark) return;
+            if (language == undefined) return;
+            return _.find($scope.filledInLanguages, function (itm) {
+                return itm.isoCode == language.isoCode;
+            });
+        };
+
         $scope.isPinnable = function (language) {
             return $scope.currentLanguage.isoCode != language.isoCode && !_.find($scope.pinnedLanguages, function (itm) {
                 return itm.isoCode == language.isoCode;
@@ -171,6 +181,7 @@
                 $scope.$broadcast("vortoSyncLanguageValue", { language: $scope.realActiveLanguage.isoCode });
             }
             $scope.realActiveLanguage = $scope.activeLanguage;
+            detectFilledInLanguages();
         });
 
         $scope.$watch("sync", function (shouldSync) {
@@ -241,6 +252,16 @@
                 $scope.pinnedLanguages = pinnedLanguages;
 
             }
+        }
+
+        var detectFilledInLanguages = function () {
+            $scope.filledInLanguages = [];
+            _.each($scope.languages, function (language) {
+                if (language.isoCode in $scope.model.value.values &&
+                    $scope.model.value.values[language.isoCode]) {
+                    $scope.filledInLanguages.push(language);
+                }
+            });
         }
 
         var validateProperty = function () {
@@ -358,6 +379,8 @@
                         reSync();
 
                         validateProperty();
+
+                        detectFilledInLanguages();
                     });
             });
         });
@@ -439,7 +462,7 @@ angular.module("umbraco.directives").directive('vortoProperty',
             restrict: "E",
             rep1ace: true,
             link: link,
-            template: '<div ng-include="propertyEditorView"></div>', 
+            template: '<div ng-include="propertyEditorView"></div>',
             scope: {
                 propertyEditorView: '=view',
                 config: '=',

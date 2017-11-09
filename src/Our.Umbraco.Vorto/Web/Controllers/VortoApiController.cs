@@ -88,11 +88,18 @@ namespace Our.Umbraco.Vorto.Web.Controllers
             var dtd = Services.DataTypeService.GetDataTypeDefinitionById(dtdGuid);
 		    if (dtd == null) return Enumerable.Empty<object>();
 
-			var preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
-			var languageSource = preValues.ContainsKey("languageSource") ? preValues["languageSource"].Value : "";
-			var primaryLanguage = preValues.ContainsKey("primaryLanguage") ? preValues["primaryLanguage"].Value : "";
+            var languages = new List<Language>();
+            var languageSource = string.Empty;
+            var primaryLanguage = string.Empty;
+            IDictionary<string, PreValue> preValues = new Dictionary<string, PreValue>();
 
-			var languages = new List<Language>();
+            var preValuesCollection = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
+            if (preValuesCollection.IsDictionaryBased)
+            {
+                preValues = Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
+                languageSource = preValues.ContainsKey("languageSource") ? preValues["languageSource"].Value : "";
+                primaryLanguage = preValues.ContainsKey("primaryLanguage") ? preValues["primaryLanguage"].Value : "";
+            }						
 
 			if (languageSource == "inuse")
 			{

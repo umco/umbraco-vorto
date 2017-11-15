@@ -8,28 +8,31 @@ version: 1.6.1.{build}
 init:
   - set UMBRACO_PACKAGE_PRERELEASE_SUFFIX=
 
+cache:
+  - src\packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
+
 build_script:
-- build-appveyor.cmd
+  - build-appveyor.cmd
 
 artifacts:
   - path: artifacts\*.nupkg
   - path: artifacts\*.zip
 
 deploy:
-     # MyGet Deployment for builds & releases
+    # MyGet Deployment for builds & releases
   - provider: NuGet
-    server: https://www.myget.org/F/umbraco-vorto/
-    symbol_server: https://nuget.symbolsource.org/MyGet/umbraco-vorto
+    server: https://www.myget.org/F/umbraco-packages/
+    symbol_server: https://nuget.symbolsource.org/MyGet/umbraco-packages
     api_key:
-      secure: gHDTL46KZcLzj6J8m//TJgaCOJCl9ixR//rXjO18HRlCsfPYYz7dU81u2D5zd+ZN
+      secure: 36/Ax5O+e6wENlhoTwgvoEBZV3FG4XjF429SNTej2qsGTAL+cdfA1kT/tm1St8vx
     artifact: /.*\.nupkg/
     on:
       branch: develop
 
-     # GitHub Deployment for releases
+    # GitHub Deployment for releases
   - provider: GitHub
     auth_token:
-      secure: GyY9va9/RfmO6mK7xMhaciO9mtep3HYW0DEPeFVUBbYvZGRjk8enQ/tW6id6yE7D
+      secure: yDxrRTveSScJA35MQTOaLYVjoPKFKl2bHBkG+JMZjiN0r7AfuUCxVU3CgW8Imu4h
     artifact: /.*\.zip/            # upload all Zip packages to release assets
     draft: false
     prerelease: false
@@ -37,7 +40,7 @@ deploy:
       branch: master
       appveyor_repo_tag: true        # deploy on tag push only
 
-     # NuGet Deployment for releases
+    # NuGet Deployment for releases
   - provider: NuGet
     server: 
     api_key:

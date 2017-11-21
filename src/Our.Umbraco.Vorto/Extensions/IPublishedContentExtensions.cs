@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
@@ -95,6 +95,8 @@ namespace Our.Umbraco.Vorto.Extensions
             bool recursive = false, T defaultValue = default(T))
         {
             var prop = content.GetProperty(propertyAlias);
+	// prevent generation of NullReferenceException: allow return of defaultValue or traversal up the tree
+	if(prop != null) {
             var vortoModel = prop.Value as VortoValue;
             if (vortoModel?.Values != null)
             {
@@ -150,7 +152,7 @@ namespace Our.Umbraco.Vorto.Extensions
                     return defaultValue;
                 }
             }
-
+	}
             return recursive && content.Parent != null
                 ? content.Parent.DoInnerGetVortoValue<T>(propertyAlias, cultureName, recursive, defaultValue)
                 : defaultValue;

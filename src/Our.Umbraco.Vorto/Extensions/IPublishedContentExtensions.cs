@@ -1,4 +1,4 @@
-﻿using System.Threading;
+using System.Threading;
 using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
@@ -95,62 +95,65 @@ namespace Our.Umbraco.Vorto.Extensions
             bool recursive = false, T defaultValue = default(T))
         {
             var prop = content.GetProperty(propertyAlias);
-            var vortoModel = prop.Value as VortoValue;
-            if (vortoModel?.Values != null)
+            // prevent generation of NullReferenceException: allow return of defaultValue or traversal up the tree
+            if (prop != null)
             {
-                // Get the serialized value
-                var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                if (!bestMatchCultureName.IsNullOrWhiteSpace()
-                    && vortoModel.Values.ContainsKey(bestMatchCultureName)
-                    && vortoModel.Values[bestMatchCultureName] != null
-                    && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
+                var vortoModel = prop.Value as VortoValue;
+                if (vortoModel?.Values != null)
                 {
-                    var value = vortoModel.Values[bestMatchCultureName];
+                    // Get the serialized value
+                    var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
+                    if (!bestMatchCultureName.IsNullOrWhiteSpace()
+                        && vortoModel.Values.ContainsKey(bestMatchCultureName)
+                        && vortoModel.Values[bestMatchCultureName] != null
+                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
+                    {
+                        var value = vortoModel.Values[bestMatchCultureName];
 
-                    // Get target datatype
-                    var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
+                        // Get target datatype
+                        var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
 
-                    // Umbraco has the concept of a IPropertyEditorValueConverter which it 
-                    // also queries for property resolvers. However I'm not sure what these
-                    // are for, nor can I find any implementations in core, so am currently
-                    // just ignoring these when looking up converters.
-                    // NB: IPropertyEditorValueConverter not to be confused with
-                    // IPropertyValueConverter which are the ones most people are creating
-                    var properyType = CreateDummyPropertyType(
-                        targetDataType.Id,
-                        targetDataType.PropertyEditorAlias,
-                        content.ContentType);
+                        // Umbraco has the concept of a IPropertyEditorValueConverter which it 
+                        // also queries for property resolvers. However I'm not sure what these
+                        // are for, nor can I find any implementations in core, so am currently
+                        // just ignoring these when looking up converters.
+                        // NB: IPropertyEditorValueConverter not to be confused with
+                        // IPropertyValueConverter which are the ones most people are creating
+                        var properyType = CreateDummyPropertyType(
+                            targetDataType.Id,
+                            targetDataType.PropertyEditorAlias,
+                            content.ContentType);
 
-                    var inPreviewMode = UmbracoContext.Current != null && UmbracoContext.Current.InPreviewMode;
+                        var inPreviewMode = UmbracoContext.Current != null && UmbracoContext.Current.InPreviewMode;
 
-                    // Try convert data to source
-                    // We try this first as the value is stored as JSON not
-                    // as XML as would occur in the XML cache as in the act
-                    // of converting to XML this would ordinarily get called
-                    // but with JSON it doesn't, so we try this first
-                    var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
-                    if (converted1 is T) return (T)converted1;
+                        // Try convert data to source
+                        // We try this first as the value is stored as JSON not
+                        // as XML as would occur in the XML cache as in the act
+                        // of converting to XML this would ordinarily get called
+                        // but with JSON it doesn't, so we try this first
+                        var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
+                        if (converted1 is T) return (T)converted1;
 
-                    var convertAttempt = converted1.TryConvertTo<T>();
-                    if (convertAttempt.Success) return convertAttempt.Result;
+                        var convertAttempt = converted1.TryConvertTo<T>();
+                        if (convertAttempt.Success) return convertAttempt.Result;
 
-                    // Try convert source to object
-                    // If the source value isn't right, try converting to object
-                    var converted2 = properyType.ConvertSourceToObject(converted1, inPreviewMode);
-                    if (converted2 is T) return (T)converted2;
+                        // Try convert source to object
+                        // If the source value isn't right, try converting to object
+                        var converted2 = properyType.ConvertSourceToObject(converted1, inPreviewMode);
+                        if (converted2 is T) return (T)converted2;
 
-                    convertAttempt = converted2.TryConvertTo<T>();
-                    if (convertAttempt.Success) return convertAttempt.Result;
+                        convertAttempt = converted2.TryConvertTo<T>();
+                        if (convertAttempt.Success) return convertAttempt.Result;
 
-                    // Try just converting
-                    convertAttempt = value.TryConvertTo<T>();
-                    if (convertAttempt.Success) return convertAttempt.Result;
+                        // Try just converting
+                        convertAttempt = value.TryConvertTo<T>();
+                        if (convertAttempt.Success) return convertAttempt.Result;
 
-                    // Still not right type so return default value
-                    return defaultValue;
+                        // Still not right type so return default value
+                        return defaultValue;
+                    }
                 }
             }
-
             return recursive && content.Parent != null
                 ? content.Parent.DoInnerGetVortoValue<T>(propertyAlias, cultureName, recursive, defaultValue)
                 : defaultValue;

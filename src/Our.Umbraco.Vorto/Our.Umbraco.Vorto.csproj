@@ -264,6 +264,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constants.cs" />
+    <Compile Include="Extensions\StringExtensions.cs" />
     <Compile Include="Extensions\VortoValueExtensions.cs" />
     <Compile Include="Helpers\VortoHelper.cs" />
     <Compile Include="Models\DataTypeInfo.cs" />
@@ -303,11 +304,11 @@
 REM # Copy files
 REM #################################################
 
-IF %25ComputerName%25 == MBP13-PC-BC (
+IF %25ComputerName%25 == DESKTOP-ESFKU58 (
 IF NOT "$(SolutionDir)" == "*Undefined*" (
-xcopy /s /y "$(TargetPath)" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.4.0\bin"
-xcopy /s /y "$(TargetDir)Our.Umbraco.Vorto.pdb" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.4.0\bin"
-xcopy /s /y "$(ProjectDir)Web\UI\*" "C:\Users\Matt\Work\Sandbox\Umbraco\UmbracoCms.7.4.0"
+xcopy /s /y "$(TargetPath)" "C:\Users\Matt\Storage\Sandbox\Umbraco\UmbracoCms.7.10.4\bin"
+xcopy /s /y "$(TargetDir)Our.Umbraco.Vorto.pdb" "C:\Users\Matt\Storage\Sandbox\Umbraco\UmbracoCms.7.10.4\bin"
+xcopy /s /y "$(ProjectDir)Web\UI\*" "C:\Users\Matt\Storage\Sandbox\Umbraco\UmbracoCms.7.10.4"
 )
 )</PostBuildEvent>
   </PropertyGroup>

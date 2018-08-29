@@ -53,7 +53,7 @@ namespace Our.Umbraco.Vorto.Models
 		public bool HasValue(string cultureName = null, string fallbackCultureName = null)
 		{
 			if (fallbackCultureName.IsNullOrWhiteSpace())
-				fallbackCultureName = Vorto.DefaultFallbackCutltureName;
+				fallbackCultureName = Vorto.DefaultFallbackCultureName;
 
 			var hasValue = DoHasValue(cultureName);
 			if (!hasValue && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
@@ -73,7 +73,7 @@ namespace Our.Umbraco.Vorto.Models
 			T defaultValue = default(T), string fallbackCultureName = null)
 		{
 			if (fallbackCultureName.IsNullOrWhiteSpace())
-				fallbackCultureName = Vorto.DefaultFallbackCutltureName;
+				fallbackCultureName = Vorto.DefaultFallbackCultureName;
 
 			var result = DoGetValue(cultureName);
 			if (EqualityComparer<T>.Default.Equals(result, default(T)) && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))

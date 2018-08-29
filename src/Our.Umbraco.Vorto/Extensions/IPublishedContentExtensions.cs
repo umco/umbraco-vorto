@@ -86,7 +86,7 @@ namespace Our.Umbraco.Vorto.Extensions
             string fallbackCultureName = null)
         {
 			if (fallbackCultureName.IsNullOrWhiteSpace())
-				fallbackCultureName = Vorto.DefaultFallbackCutltureName;
+				fallbackCultureName = Vorto.DefaultFallbackCultureName;
 
 			var hasValue = content.DoHasVortoValue(propertyAlias, cultureName, recursive);
             if (!hasValue && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
@@ -153,7 +153,7 @@ namespace Our.Umbraco.Vorto.Extensions
             bool recursive = false, T defaultValue = default(T), string fallbackCultureName = null)
         {
 			if (fallbackCultureName.IsNullOrWhiteSpace())
-				fallbackCultureName = Vorto.DefaultFallbackCutltureName;
+				fallbackCultureName = Vorto.DefaultFallbackCultureName;
 
 			var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive);
             if (EqualityComparer<T>.Default.Equals(result, default(T)) && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))

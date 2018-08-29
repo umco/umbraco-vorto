@@ -9,7 +9,8 @@ namespace Our.Umbraco.Vorto
 	public static class Vorto
 	{
 		private static string _defaultFallbackCultureName;
-		public static string DefaultFallbackCutltureName {
+		public static string DefaultFallbackCultureName
+		{
 			get
 			{
 				if (!_defaultFallbackCultureName.IsNullOrWhiteSpace())

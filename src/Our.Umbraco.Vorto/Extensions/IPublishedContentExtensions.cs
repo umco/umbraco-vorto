@@ -1,12 +1,10 @@
 using System.Collections.Generic;
 using System.Threading;
 using Newtonsoft.Json;
-using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using Our.Umbraco.Vorto.Web.PropertyEditors;
 using Umbraco.Core;
 using Umbraco.Core.Models;
-using Umbraco.Core.Models.PublishedContent;
 using Umbraco.Web;
 
 namespace Our.Umbraco.Vorto.Extensions

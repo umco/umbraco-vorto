@@ -7,7 +7,7 @@ namespace Our.Umbraco.Vorto.Models
 	/// <summary>
 	/// Represents a multilingual property value
 	/// </summary>
-	public class VortoValue<T>
+	public partial class VortoValue<T>
 	{
 		/// <summary>
 		/// Gets or sets the collection of language independent values

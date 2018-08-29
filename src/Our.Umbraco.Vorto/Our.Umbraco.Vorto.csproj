@@ -227,6 +227,7 @@
     <Compile Include="Extensions\IPublishedContentExtensions.cs" />
     <Compile Include="Models\Language.cs" />
     <Compile Include="Models\VortoValue.cs" />
+    <Compile Include="Models\VortoValueOfTApi.cs" />
     <Compile Include="Models\VortoValueOfT.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Properties\VersionInfo.cs" />

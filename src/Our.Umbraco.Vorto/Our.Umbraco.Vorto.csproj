@@ -130,6 +130,7 @@
       <HintPath>..\packages\UmbracoCms.Core.7.1.5\lib\SQLCE4Umbraco.dll</HintPath>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.Configuration" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SqlServerCe, Version=4.0.0.0, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <HintPath>..\packages\UmbracoCms.Core.7.1.5\lib\System.Data.SqlServerCe.dll</HintPath>

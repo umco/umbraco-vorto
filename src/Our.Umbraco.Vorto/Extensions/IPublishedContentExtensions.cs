@@ -85,7 +85,10 @@ namespace Our.Umbraco.Vorto.Extensions
             string cultureName = null, bool recursive = false,
             string fallbackCultureName = null)
         {
-            var hasValue = content.DoHasVortoValue(propertyAlias, cultureName, recursive);
+			if (fallbackCultureName.IsNullOrWhiteSpace())
+				fallbackCultureName = Vorto.DefaultFallbackCutltureName;
+
+			var hasValue = content.DoHasVortoValue(propertyAlias, cultureName, recursive);
             if (!hasValue && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
                 hasValue = content.DoHasVortoValue(propertyAlias, fallbackCultureName, recursive);
             return hasValue;
@@ -149,7 +152,10 @@ namespace Our.Umbraco.Vorto.Extensions
 		public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T), string fallbackCultureName = null)
         {
-            var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive);
+			if (fallbackCultureName.IsNullOrWhiteSpace())
+				fallbackCultureName = Vorto.DefaultFallbackCutltureName;
+
+			var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive);
             if (EqualityComparer<T>.Default.Equals(result, default(T)) && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
                 result = content.DoGetVortoValue<T>(propertyAlias, fallbackCultureName, recursive);
 			if (EqualityComparer<T>.Default.Equals(result, default(T)))

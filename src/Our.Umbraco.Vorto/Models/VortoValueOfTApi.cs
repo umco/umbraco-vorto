@@ -62,12 +62,15 @@ namespace Our.Umbraco.Vorto.Models
 		/// <summary>
 		/// Gets the Vorto value of the given type for the given culture.
 		/// </summary>
-		/// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2.</param>
+		/// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
 		/// <param name="defaultValue">The default value to return if none is found. Optional</param>
 		/// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
 		/// <returns>The <typeparamref name="T"/> value</returns>
-		public T GetValue(string cultureName, T defaultValue = default(T), string fallbackCultureName = null)
+		public T GetValue(string cultureName = null, T defaultValue = default(T), string fallbackCultureName = null)
 		{
+			if (cultureName == null)
+				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
+
 			if (fallbackCultureName.IsNullOrWhiteSpace())
 				fallbackCultureName = Vorto.DefaultFallbackCultureName;
 
@@ -83,7 +86,7 @@ namespace Our.Umbraco.Vorto.Models
 		/// Returns value for the current culture with global fallback
 		/// </summary>
 		[JsonIgnore]
-		public T Current => GetValue(Thread.CurrentThread.CurrentUICulture.Name);
+		public T Current => GetValue();
 
 		/// <summary>
 		/// Gets a language value by key

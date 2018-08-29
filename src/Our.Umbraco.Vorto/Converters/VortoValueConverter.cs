@@ -51,7 +51,8 @@ namespace Our.Umbraco.Vorto.Converters
 
 		public override object ConvertSourceToObject(PublishedPropertyType propertyType, object source, bool preview)
 		{
-			if (source is VortoValue vortoValue)
+			var vortoValue = source as VortoValue;
+			if (vortoValue != null)
 			{
 				var innerPropType = VortoHelper.GetInnerPublishedPropertyType(propertyType); 
 				if (innerPropType != null) {

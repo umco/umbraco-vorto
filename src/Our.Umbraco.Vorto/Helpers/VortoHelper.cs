@@ -17,7 +17,11 @@ namespace Our.Umbraco.Vorto.Helpers
 					// Get instance of our own datatype so we can lookup the actual datatype from prevalue
 					var services = ApplicationContext.Current.Services;
 					var dtd = services.DataTypeService.GetDataTypeDefinitionById(myId);
-					var preValues = services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id).PreValuesAsDictionary;
+					if (dtd == null) return null;
+
+					var preValues = services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id)?.PreValuesAsDictionary;
+					if (preValues == null || !preValues.ContainsKey("dataType")) return null;
+
 					var dataType = JsonConvert.DeserializeObject<DataTypeInfo>(preValues["dataType"].Value);
 
 					// Grab an instance of the target datatype

@@ -120,14 +120,16 @@ namespace Our.Umbraco.Vorto.Extensions
 
                     // Get target datatype
                     var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
+					if (targetDataType == null)
+						return defaultValue;
 
-                    // Umbraco has the concept of a IPropertyEditorValueConverter which it 
-                    // also queries for property resolvers. However I'm not sure what these
-                    // are for, nor can I find any implementations in core, so am currently
-                    // just ignoring these when looking up converters.
-                    // NB: IPropertyEditorValueConverter not to be confused with
-                    // IPropertyValueConverter which are the ones most people are creating
-                    var properyType = CreateDummyPropertyType(
+					// Umbraco has the concept of a IPropertyEditorValueConverter which it 
+					// also queries for property resolvers. However I'm not sure what these
+					// are for, nor can I find any implementations in core, so am currently
+					// just ignoring these when looking up converters.
+					// NB: IPropertyEditorValueConverter not to be confused with
+					// IPropertyValueConverter which are the ones most people are creating
+						var properyType = CreateDummyPropertyType(
                         targetDataType.Id,
                         targetDataType.PropertyEditorAlias,
                         content.ContentType);

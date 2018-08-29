@@ -109,19 +109,9 @@ namespace Our.Umbraco.Vorto.Extensions
 			}
 
             var vortoModel = prop.Value as VortoValue<T>;
-            if (vortoModel?.Values != null)
+            if (vortoModel != null)
             {
-                // Get the serialized value
-                var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                if (!bestMatchCultureName.IsNullOrWhiteSpace()
-                    && vortoModel.Values.ContainsKey(bestMatchCultureName)
-                    && vortoModel.Values[bestMatchCultureName] != null
-                    && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
-                {
-                    var value = vortoModel.Values[bestMatchCultureName];
-					var attempt = value.TryConvertTo<T>();
-					return attempt.Success ? attempt.Result : defaultValue;
-                }
+				return vortoModel.GetValue(cultureName, defaultValue);
             }
 
             return recursive && content.Parent != null

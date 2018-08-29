@@ -21,18 +21,6 @@ namespace Our.Umbraco.Vorto.Models
 		[JsonProperty("dtdGuid")]
 		public Guid DtdGuid { get; set; }
 
-		/// <summary>
-		/// Gets a language value by key
-		/// </summary>
-		[JsonIgnore]
-		public T this[string key]
-		{
-			get
-			{
-				return Values[key];
-			}
-		}
-
 		public VortoValue()
 		{
 			Values = new Dictionary<string, T>();

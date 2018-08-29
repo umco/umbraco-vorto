@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Threading;
 using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Helpers;
@@ -106,7 +107,7 @@ namespace Our.Umbraco.Vorto.Extensions
 				return defaultValue;
 			}
 
-            var vortoModel = prop.Value as VortoValue;
+            var vortoModel = prop.Value as VortoValue<T>;
             if (vortoModel?.Values != null)
             {
                 // Get the serialized value
@@ -117,50 +118,8 @@ namespace Our.Umbraco.Vorto.Extensions
                     && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
                 {
                     var value = vortoModel.Values[bestMatchCultureName];
-
-                    // Get target datatype
-                    var targetDataType = VortoHelper.GetTargetDataTypeDefinition(vortoModel.DtdGuid);
-					if (targetDataType == null)
-						return defaultValue;
-
-					// Umbraco has the concept of a IPropertyEditorValueConverter which it 
-					// also queries for property resolvers. However I'm not sure what these
-					// are for, nor can I find any implementations in core, so am currently
-					// just ignoring these when looking up converters.
-					// NB: IPropertyEditorValueConverter not to be confused with
-					// IPropertyValueConverter which are the ones most people are creating
-						var properyType = CreateDummyPropertyType(
-                        targetDataType.Id,
-                        targetDataType.PropertyEditorAlias,
-                        content.ContentType);
-
-                    var inPreviewMode = UmbracoContext.Current != null && UmbracoContext.Current.InPreviewMode;
-
-                    // Try convert data to source
-                    // We try this first as the value is stored as JSON not
-                    // as XML as would occur in the XML cache as in the act
-                    // of converting to XML this would ordinarily get called
-                    // but with JSON it doesn't, so we try this first
-                    var converted1 = properyType.ConvertDataToSource(value, inPreviewMode);
-                    if (converted1 is T) return (T)converted1;
-
-                    var convertAttempt = converted1.TryConvertTo<T>();
-                    if (convertAttempt.Success) return convertAttempt.Result;
-
-                    // Try convert source to object
-                    // If the source value isn't right, try converting to object
-                    var converted2 = properyType.ConvertSourceToObject(converted1, inPreviewMode);
-                    if (converted2 is T) return (T)converted2;
-
-                    convertAttempt = converted2.TryConvertTo<T>();
-                    if (convertAttempt.Success) return convertAttempt.Result;
-
-                    // Try just converting
-                    convertAttempt = value.TryConvertTo<T>();
-                    if (convertAttempt.Success) return convertAttempt.Result;
-
-                    // Still not right type so return default value
-                    return defaultValue;
+					var attempt = value.TryConvertTo<T>();
+					return attempt.Success ? attempt.Result : defaultValue;
                 }
             }
 
@@ -178,38 +137,40 @@ namespace Our.Umbraco.Vorto.Extensions
 		    return content.DoInnerGetVortoValue(propertyAlias, cultureName, recursive, defaultValue);
 		}
 
-        /// <summary>
-        /// Gets the Vorto value for the given content property as the given type.
-        /// </summary>
-        /// <typeparam name="T">The type of value to return</typeparam>
-        /// <param name="content">The cached content</param>
-        /// <param name="propertyAlias">The property alias</param>
-        /// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2</param>
-        /// <param name="recursive">Whether to recursively travel up the content tree looking for the value</param>
-        /// <param name="defaultValue">The default value to return if none is found</param>
-        /// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
-        /// <returns>The <typeparamref name="T"/> value</returns>
-        public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
+		/// <summary>
+		/// Gets the Vorto value for the given content property as the given type.
+		/// </summary>
+		/// <typeparam name="T">The type of value to return</typeparam>
+		/// <param name="content">The cached content</param>
+		/// <param name="propertyAlias">The property alias</param>
+		/// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
+		/// <param name="recursive">Whether to recursively travel up the content tree looking for the value. Optional</param>
+		/// <param name="defaultValue">The default value to return if none is found. Optional</param>
+		/// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
+		/// <returns>The <typeparamref name="T"/> value</returns>
+		public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T), string fallbackCultureName = null)
         {
-            var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive, default(T));
-            if (result == null && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
-                result = content.DoGetVortoValue<T>(propertyAlias, fallbackCultureName, recursive, defaultValue);
+            var result = content.DoGetVortoValue<T>(propertyAlias, cultureName, recursive);
+            if (EqualityComparer<T>.Default.Equals(result, default(T)) && !string.IsNullOrEmpty(fallbackCultureName) && !fallbackCultureName.Equals(cultureName))
+                result = content.DoGetVortoValue<T>(propertyAlias, fallbackCultureName, recursive);
+			if (EqualityComparer<T>.Default.Equals(result, default(T)))
+				result = defaultValue;
 
             return result;
         }
 
-	    /// <summary>
-	    /// Gets the Vorto value for the given content property.
-	    /// </summary>
-	    /// <param name="content">The cached content</param>
-	    /// <param name="propertyAlias">The property alias</param>
-	    /// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2</param>
-	    /// <param name="recursive">Whether to recursively travel up the content tree looking for the value</param>
-	    /// <param name="defaultValue">The default value to return if none is found</param>
-	    /// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
-	    /// <returns>The <see cref="object"/> value</returns>
-        public static object GetVortoValue(this IPublishedContent content, string propertyAlias, string cultureName = null,
+		/// <summary>
+		/// Gets the Vorto value for the given content property.
+		/// </summary>
+		/// <param name="content">The cached content</param>
+		/// <param name="propertyAlias">The property alias</param>
+		/// <param name="cultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
+		/// <param name="recursive">Whether to recursively travel up the content tree looking for the value. Optional</param>
+		/// <param name="defaultValue">The default value to return if none is found. Optional</param>
+		/// <param name="fallbackCultureName">The culture name in the format languagecode2-country/regioncode2. Optional</param>
+		/// <returns>The <see cref="object"/> value</returns>
+		public static object GetVortoValue(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, object defaultValue = null,
             string fallbackCultureName = null)
         {
@@ -232,14 +193,5 @@ namespace Our.Umbraco.Vorto.Extensions
         }
 
         #endregion
-
-        private static PublishedPropertyType CreateDummyPropertyType(int dataTypeId, string propertyEditorAlias, PublishedContentType contentType)
-		{
-            return new PublishedPropertyType(contentType,
-				new PropertyType(new DataTypeDefinition(-1, propertyEditorAlias)
-				{
-					Id = dataTypeId
-				}));
-		}
 	}
 }

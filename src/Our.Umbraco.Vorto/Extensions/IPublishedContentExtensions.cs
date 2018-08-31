@@ -13,63 +13,51 @@ namespace Our.Umbraco.Vorto.Extensions
 	{
         #region HasValue
 
-        private static bool DoInnerHasVortoValue(this IPublishedContent content, string propertyAlias,
+		private static bool DoHasVortoValue(this IPublishedContent content, string propertyAlias,
             string cultureName = null, bool recursive = false)
-	    {
-            if (content.HasValue(propertyAlias))
-            {
-                var prop = content.GetProperty(propertyAlias);
+		{
+			if (content.HasValue(propertyAlias))
+			{
+				var prop = content.GetProperty(propertyAlias);
 				if (prop == null)
 				{
 					return false;
 				}
 
-                var dataValue = prop.DataValue;
-                if (dataValue == null)
-                {
-                    return false;
-                }
+				var dataValue = prop.DataValue;
+				if (dataValue == null)
+				{
+					return false;
+				}
 
-                VortoValue vortoModel;
+				VortoValue vortoModel;
 
-                try
-                {
-                    // We purposfully parse the raw data value ourselves bypassing the property
-                    // value converters so that we don't require an UmbracoContext during a
-                    // HasValue check. As we won't actually use the value, this is ok here. 
-                    vortoModel = JsonConvert.DeserializeObject<VortoValue>(dataValue.ToString());
-                }
-                catch
-                {
-                    return false;
-                }
+				try
+				{
+					// We purposfully parse the raw data value ourselves bypassing the property
+					// value converters so that we don't require an UmbracoContext during a
+					// HasValue check. As we won't actually use the value, this is ok here. 
+					vortoModel = JsonConvert.DeserializeObject<VortoValue>(dataValue.ToString());
+				}
+				catch
+				{
+					return false;
+				}
 
-                if (vortoModel?.Values != null)
-                {
-                    var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
-                    if (!bestMatchCultureName.IsNullOrWhiteSpace()
-                        && vortoModel.Values.ContainsKey(bestMatchCultureName)
-                        && vortoModel.Values[bestMatchCultureName] != null
-                        && !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
-                        return true;
-                }
-            }
+				if (vortoModel?.Values != null)
+				{
+					var bestMatchCultureName = vortoModel.FindBestMatchCulture(cultureName);
+					if (!bestMatchCultureName.IsNullOrWhiteSpace()
+						&& vortoModel.Values.ContainsKey(bestMatchCultureName)
+						&& vortoModel.Values[bestMatchCultureName] != null
+						&& !vortoModel.Values[bestMatchCultureName].ToString().IsNullOrWhiteSpace())
+						return true;
+				}
+			}
 
-            return recursive && content.Parent != null
-                ? content.Parent.DoInnerHasVortoValue(propertyAlias, cultureName, recursive)
-                : false;
-	    }
-
-		private static bool DoHasVortoValue(this IPublishedContent content, string propertyAlias,
-            string cultureName = null, bool recursive = false)
-		{
-			if (cultureName == null)
-				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
-
-			if (!content.HasValue(propertyAlias, recursive))
-				return false;
-
-		    return content.DoInnerHasVortoValue(propertyAlias, cultureName, recursive);
+			return recursive && content.Parent != null
+				? content.Parent.DoHasVortoValue(propertyAlias, cultureName, recursive)
+				: false;
 		}
 
         /// <summary>
@@ -85,6 +73,9 @@ namespace Our.Umbraco.Vorto.Extensions
             string cultureName = null, bool recursive = false,
             string fallbackCultureName = null)
         {
+			if (cultureName.IsNullOrWhiteSpace())
+				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
+
 			if (fallbackCultureName.IsNullOrWhiteSpace())
 				fallbackCultureName = Vorto.DefaultFallbackCultureName;
 
@@ -98,34 +89,25 @@ namespace Our.Umbraco.Vorto.Extensions
 
         #region GetValue
 
-        private static T DoInnerGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
+		private static T DoGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T))
-        {
-            var prop = content.GetProperty(propertyAlias);
+		{
+			var prop = content.GetProperty(propertyAlias);
 			if (prop == null)
 			{
 				// PR #100 - Prevent generation of NullReferenceException: allow return of defaultValue or traversal up the tree if prop is null
 				return defaultValue;
 			}
 
-            var vortoModel = prop.Value as VortoValue<T>;
-            if (vortoModel != null)
-            {
+			var vortoModel = prop.Value as VortoValue<T>;
+			if (vortoModel != null)
+			{
 				return vortoModel.GetValue(cultureName, defaultValue);
-            }
+			}
 
-            return recursive && content.Parent != null
-                ? content.Parent.DoInnerGetVortoValue<T>(propertyAlias, cultureName, recursive, defaultValue)
-                : defaultValue;
-        }
-
-		private static T DoGetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
-            bool recursive = false, T defaultValue = default(T))
-		{
-			if (cultureName == null)
-				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
-
-		    return content.DoInnerGetVortoValue(propertyAlias, cultureName, recursive, defaultValue);
+			return recursive && content.Parent != null
+				? content.Parent.DoGetVortoValue<T>(propertyAlias, cultureName, recursive, defaultValue)
+				: defaultValue;
 		}
 
 		/// <summary>
@@ -141,7 +123,10 @@ namespace Our.Umbraco.Vorto.Extensions
 		/// <returns>The <typeparamref name="T"/> value</returns>
 		public static T GetVortoValue<T>(this IPublishedContent content, string propertyAlias, string cultureName = null,
             bool recursive = false, T defaultValue = default(T), string fallbackCultureName = null)
-        {
+		{
+			if (cultureName.IsNullOrWhiteSpace())
+				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
+
 			if (fallbackCultureName.IsNullOrWhiteSpace())
 				fallbackCultureName = Vorto.DefaultFallbackCultureName;
 

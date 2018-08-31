@@ -48,7 +48,7 @@ namespace Our.Umbraco.Vorto.Models
 		/// <returns>The <see cref="bool"/></returns>
 		public bool HasValue(string cultureName = null, string fallbackCultureName = null)
 		{
-			if (cultureName == null)
+			if (cultureName.IsNullOrWhiteSpace())
 				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
 
 			if (fallbackCultureName.IsNullOrWhiteSpace())
@@ -69,7 +69,7 @@ namespace Our.Umbraco.Vorto.Models
 		/// <returns>The <typeparamref name="T"/> value</returns>
 		public T GetValue(string cultureName = null, T defaultValue = default(T), string fallbackCultureName = null)
 		{
-			if (cultureName == null)
+			if (cultureName.IsNullOrWhiteSpace())
 				cultureName = Thread.CurrentThread.CurrentUICulture.Name;
 
 			if (fallbackCultureName.IsNullOrWhiteSpace())

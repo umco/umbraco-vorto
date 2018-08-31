@@ -13,11 +13,9 @@ namespace Our.Umbraco.Vorto
 		{
 			get
 			{
-				if (!_defaultFallbackCultureName.IsNullOrWhiteSpace())
-				{
-					return _defaultFallbackCultureName;
-				}
-				return ConfigurationManager.AppSettings["Vorto:DefaultFallbackCultureName"];
+				return !_defaultFallbackCultureName.IsNullOrWhiteSpace()
+					? _defaultFallbackCultureName
+					: ConfigurationManager.AppSettings["Vorto:DefaultFallbackCultureName"];
 			}
 			set
 			{

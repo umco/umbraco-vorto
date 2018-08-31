@@ -1,4 +1,5 @@
 ﻿using System.Linq;
+using Umbraco.Core;
 using Our.Umbraco.Vorto.Models;
 
 namespace Our.Umbraco.Vorto.Extensions
@@ -17,7 +18,7 @@ namespace Our.Umbraco.Vorto.Extensions
 
             // Close match
             return cultureName.Length == 2
-                ? value.Values.Keys.FirstOrDefault(x => x.StartsWith(cultureName + "-"))
+                ? value.Values.Keys.FirstOrDefault(x => x.InvariantStartsWith(cultureName + "-"))
                 : string.Empty;
         }
 	}

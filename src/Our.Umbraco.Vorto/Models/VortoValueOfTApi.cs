@@ -1,5 +1,6 @@
 ﻿using Newtonsoft.Json;
 using Our.Umbraco.Vorto.Extensions;
+using System;
 using System.Collections.Generic;
 using System.Threading;
 using Umbraco.Core;
@@ -92,12 +93,6 @@ namespace Our.Umbraco.Vorto.Models
 		/// Gets a language value by key
 		/// </summary>
 		[JsonIgnore]
-		public T this[string key]
-		{
-			get
-			{
-				return Values[key];
-			}
-		}
+		public T this[string key] => DoGetValue(key);
 	}
 }

@@ -7,8 +7,9 @@
     'umbPropEditorHelper',
     'Our.Umbraco.Resources.Vorto.vortoResources',
     'Our.Umbraco.Services.Vorto.vortoLocalStorageService',
-    function ($scope, $rootScope, appState, editorState, formHelper, umbPropEditorHelper, vortoResources, localStorageService) {
-			
+    'Our.Umbraco.Services.Vorto.vortoCacheService',
+    function ($scope, $rootScope, appState, editorState, formHelper, umbPropEditorHelper, vortoResources, localStorageService, cacheService) {
+
         // Get node context
         // DTGE/NC expose the context on the scope
         // to avoid overwriting the editorState
@@ -318,27 +319,68 @@
         }
 
         var getCurrentSection = function() {
-        	var currentSection = appState.getSectionState("currentSection");
+            var currentSection = appState.getSectionState("currentSection");
 
             // The newer back office now shows a preview of property editors in the doc type editor
             // so the current section will always be settings. If we are in the settings section
             // then look for why type of content editor we are and set the current section accordingly.
             // NB: Member types is normally in the members section so that should actually work.
-        	if (currentSection === "settings") {
-        		if (window.location.hash.match(new RegExp("mediaTypes"))) {
-        			currentSection = "media";
-        		}
-        		else if (window.location.hash.match(new RegExp("documentTypes"))) {
-        			currentSection = "content";
-        		}
-        	}
+            if (currentSection === "settings") {
+                if (window.location.hash.match(new RegExp("mediaTypes"))) {
+                    currentSection = "media";
+                }
+                else if (window.location.hash.match(new RegExp("documentTypes"))) {
+                    currentSection = "content";
+                }
+            }
 
-	        return currentSection;
+            return currentSection;
         }
 
-        // Load the datatype
-        vortoResources.getDataTypeById($scope.model.config.dataType.guid).then(function (dataType) {
+        var setLanguages = function(languages) {
+            $scope.languages = languages;
 
+            if (!$scope.model.value.values) {
+                $scope.model.value.values = {};
+            }
+
+            _.each($scope.languages, function (language) {
+                if (!$scope.model.value.values.hasOwnProperty(language.isoCode)) {
+                    $scope.model.value.values[language.isoCode] = $scope.model.value.values[language.isoCode];
+                }
+            });
+
+            $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
+                return itm.isDefault;
+            });
+
+            reSync();
+
+            validateProperty();
+
+            detectFilledInLanguages();
+        }
+
+        var setDataType2 = function(dataType2, currentSection) {
+            $scope.model.value.dtdGuid = dataType2.guid;
+
+            var languagesKey = 'getLanguages_' + currentSection + '_' + editorState.current.id + '_' + editorState.current.parentId + '_' + dataType2.guid;
+            var languagesPromise = cacheService.get(languagesKey);
+            if (!languagesPromise) {
+                languagesPromise = vortoResources.getLanguages(currentSection,
+                    editorState.current.id,
+                    editorState.current.parentId,
+                    dataType2.guid);
+                cacheService.set(languagesKey, languagesPromise);
+            }
+
+            // Load the languages (this will trigger everything else to bind)
+            languagesPromise.then(function(languages) {
+                setLanguages(languages);
+            });
+        }
+
+        var setDataType = function(dataType) {
             // Stash the config in scope for reuse
             $scope.property.config = dataType.preValues;
 
@@ -348,47 +390,36 @@
             // Get the property alias
             var propAlias = $scope.model.propertyAlias || $scope.model.alias;
 
-        	// Get the content type alias
+            // Get the content type alias
             var contentTypeAlias = nodeContext.contentTypeAlias || nodeContext.alias;
 
             // Work out what section we are in
-			var currentSection = getCurrentSection();
+            var currentSection = getCurrentSection();
 
-        	// Get the current properties datatype
-            vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias).then(function (dataType2) {
+            var dataTypeByAliasKey = 'getDataTypeByAlias_' + currentSection + '_' + contentTypeAlias + '_' + propAlias;
+            var dataTypeByAliasPromise = cacheService.get(dataTypeByAliasKey);
+            if (!dataTypeByAliasPromise) {
+                dataTypeByAliasPromise = vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias);
+                cacheService.set(dataTypeByAliasKey, dataTypeByAliasPromise);
+            }
 
-                $scope.model.value.dtdGuid = dataType2.guid;
-
-                // Load the languages (this will trigger everything else to bind)
-                vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType2.guid)
-                    .then(function (languages) {
-
-                        $scope.languages = languages;
-
-                        if (!$scope.model.value.values) {
-                            $scope.model.value.values = {};
-                        }
-
-                        _.each($scope.languages, function (language) {
-                            if (!$scope.model.value.values.hasOwnProperty(language.isoCode)) {
-                                $scope.model.value.values[language.isoCode] = $scope.model.value.values[language.isoCode];
-                            }
-                        });
-
-                        $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
-                            return itm.isDefault;
-                        });
-
-                        reSync();
-
-                        validateProperty();
-
-                        detectFilledInLanguages();
-                    });
+            // Get the current properties datatype
+            dataTypeByAliasPromise.then(function(dataType2) {
+                setDataType2(dataType2, currentSection);
             });
+        };
+
+        var dataTypeByIdKey = "getDataTypeById_" + $scope.model.config.dataType.guid;
+        var dataTypeByIdPromise = cacheService.get(dataTypeByIdKey);
+        if (!dataTypeByIdPromise) {
+            // Load the datatype
+            dataTypeByIdPromise = vortoResources.getDataTypeById($scope.model.config.dataType.guid);
+            cacheService.set(dataTypeByIdKey, dataTypeByIdPromise);
+        }
+
+        dataTypeByIdPromise.then(function(dataType) {
+            setDataType(dataType);
         });
-
-
     }
 ]);
 
@@ -550,6 +581,25 @@ angular.module('umbraco.services').factory('Our.Umbraco.Services.Vorto.vortoLoca
             },
             set: function (key, obj) {
                 stash(key, JSON.stringify(obj));
+            }
+        };
+    }
+);
+
+angular.module('umbraco.services').factory('Our.Umbraco.Services.Vorto.vortoCacheService',
+    function () {
+
+        var cache = {};
+
+        return {
+            get: function (key) {
+                return cache[key];
+            },
+            set: function (key, obj) {
+                cache[key] = obj;
+            },
+            clear: function () {
+                cache = {};
             }
         };
     }

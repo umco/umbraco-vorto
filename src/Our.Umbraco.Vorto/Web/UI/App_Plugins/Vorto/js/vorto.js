@@ -596,3 +596,82 @@ $(function () {
 
 });
 
+// Helper Class to Manage the loading of Rich text forms.
+// Stops save while the rich text is loading.
+
+// Click event on a vorto language tab causes a load
+$("body")
+    .on("click",
+        ".vorto-tabs__item",
+        function () {
+            $(".umb-editor-drawer-content").hide();
+            waitForDrawerVisible();
+        });
+
+// Check if we are still loading (by looking for "Loading" span)
+function checkStillLoading() {
+    setTimeout(function () {
+        var length = $("localize:contains('Loading')").length;
+        if (length > 0) {
+            $(".umb-panel.umb-editor-wrapper").click();
+            checkStillLoading();
+        } else {
+            $("div.jda-working").remove();
+            $(".umb-editor-drawer-content").show();
+        }
+    }, 100);
+};
+
+// Wait for loading to start (by looking for "Loading" span)
+function waitForLoading(iteration) {
+    // Only do this 5 times - in case there is a form which doesn't have any
+    // rich text fields.
+    if (!iteration) {
+        iteration = 1;
+    } else {
+        iteration = iteration + 1;
+    }
+
+    // If we hit 5 iterations, perform the check
+    if (iteration > 5) {
+        checkStillLoading();
+        return;
+    }
+
+    // 100ms timeout to check for still reloading
+    setTimeout(function () {
+        if ($("localize:contains('Loading')").length === 0) {
+            waitForLoading(iteration);
+        } else {
+            checkStillLoading();
+        }
+    }, 100);
+}
+
+// Wait for the umbraco drawer to become available - then hide it.
+function waitForDrawerVisible() {
+    setTimeout(function () {
+        if ($(".umb-editor-drawer-content").length === 0) {
+            waitForDrawerVisible();
+        } else {
+            // Hide the drawer and wait for loading to start.
+            $(".umb-editor-drawer-content").hide();
+            $(".umb-editor-drawer-content").parent().append(
+                "<div style='font-weight: 700; margin: 6px; font-size: 14px;' class='jda-working umb-editor-drawer-content'>" +
+                "<div class='umb-editor-drawer-content__right-side'>" +
+                "<span style='vertical-align: middle; font-size: 24px' class='icon icon-hourglass'></span>" +
+                "<span style='vertical-align: middle;'>Loading Rich Text...</span>" +
+                "</div>" +
+                "</div>");
+            waitForLoading();
+        }
+    }, 100);
+};
+
+// On clicking a content tab, perform the loading wait
+$("body").on("click", ".nav.nav-tabs.umb-nav-tabs.ng-scope li", function () {
+    waitForDrawerVisible();
+});
+
+// Initialise the process.
+waitForDrawerVisible();

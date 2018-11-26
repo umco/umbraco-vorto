@@ -616,7 +616,7 @@ function checkStillLoading() {
             $(".umb-panel.umb-editor-wrapper").click();
             checkStillLoading();
         } else {
-            $("div.jda-working").remove();
+            $("div.rich-text-working").remove();
             $(".umb-editor-drawer-content").show();
         }
     }, 100);
@@ -657,7 +657,7 @@ function waitForDrawerVisible() {
             // Hide the drawer and wait for loading to start.
             $(".umb-editor-drawer-content").hide();
             $(".umb-editor-drawer-content").parent().append(
-                "<div style='font-weight: 700; margin: 6px; font-size: 14px;' class='jda-working umb-editor-drawer-content'>" +
+                "<div style='font-weight: 700; margin: 6px; font-size: 14px;' class='rich-text-working umb-editor-drawer-content'>" +
                 "<div class='umb-editor-drawer-content__right-side'>" +
                 "<span style='vertical-align: middle; font-size: 24px' class='icon icon-hourglass'></span>" +
                 "<span style='vertical-align: middle;'>Loading Rich Text...</span>" +

@@ -1,35 +1,39 @@
 os: Visual Studio 2015
 
 # version format
-version: 1.6.0.{build}
+version: 1.6.1.{build}
 
 # UMBRACO_PACKAGE_PRERELEASE_SUFFIX if a rtm release build this should be blank, otherwise if empty will default to alpha
 # example UMBRACO_PACKAGE_PRERELEASE_SUFFIX=beta
 init:
   - set UMBRACO_PACKAGE_PRERELEASE_SUFFIX=
 
+cache:
+  - src\packages -> **\packages.config  # preserve "packages" directory in the root of build folder but will reset it if packages.config is modified
+
 build_script:
-- build-appveyor.cmd
+  - build-appveyor.cmd
 
 artifacts:
   - path: artifacts\*.nupkg
   - path: artifacts\*.zip
 
 deploy:
-     # MyGet Deployment for builds & releases
+    # MyGet Deployment for builds & releases
   - provider: NuGet
-    server: https://www.myget.org/F/umbraco-vorto/
-    symbol_server: https://nuget.symbolsource.org/MyGet/umbraco-vorto
+    server: https://www.myget.org/F/umbraco-packages/api/v2/package
+    # symbol_server: https://www.myget.org/F/umbraco-packages/symbols/api/v2/package
+    skip_symbols: true
     api_key:
-      secure: gHDTL46KZcLzj6J8m//TJgaCOJCl9ixR//rXjO18HRlCsfPYYz7dU81u2D5zd+ZN
+      secure: 36/Ax5O+e6wENlhoTwgvoEBZV3FG4XjF429SNTej2qsGTAL+cdfA1kT/tm1St8vx
     artifact: /.*\.nupkg/
     on:
       branch: develop
 
-     # GitHub Deployment for releases
+    # GitHub Deployment for releases
   - provider: GitHub
     auth_token:
-      secure: GyY9va9/RfmO6mK7xMhaciO9mtep3HYW0DEPeFVUBbYvZGRjk8enQ/tW6id6yE7D
+      secure: yDxrRTveSScJA35MQTOaLYVjoPKFKl2bHBkG+JMZjiN0r7AfuUCxVU3CgW8Imu4h
     artifact: /.*\.zip/            # upload all Zip packages to release assets
     draft: false
     prerelease: false
@@ -37,11 +41,12 @@ deploy:
       branch: master
       appveyor_repo_tag: true        # deploy on tag push only
 
-     # NuGet Deployment for releases
+    # NuGet Deployment for releases
   - provider: NuGet
     server: 
+    skip_symbols: true
     api_key:
-      secure: q2Aov00i+eWTpbwWHB1JN8EAGw4o8FaOC2lj2MolyS6TGkUUFTJK/vQTQzaf/EQ5
+      secure: vEophXSqus5F60LRBY4/j1l6K/S5+n3/yYpiID3O7JJW1gyj+0q0enuHhN3tgdhl
     artifact: /.*\.nupkg/
     on:
       branch: master

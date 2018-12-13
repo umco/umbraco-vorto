@@ -1,9 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
+using System.Threading;
 using ClientDependency.Core;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
+using Our.Umbraco.Vorto.Extensions;
 using Our.Umbraco.Vorto.Helpers;
 using Our.Umbraco.Vorto.Models;
 using Umbraco.Core;
@@ -120,18 +123,25 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 					    }
 
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-				        var propType = new PropertyType(dtd);
+						if (dtd != null)
+						{
+							var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+							var propType = new PropertyType(dtd);
 
-				        var keys = value.Values.Keys.ToArray();
-				        foreach (var key in keys)
-				        {
-				            var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
-				            var newValue = propEditor.ValueEditor.ConvertDbToString(prop, propType, dataTypeService);
-				            value.Values[key] = newValue;
-				        }
+							var keys = value.Values.Keys.ToArray();
+							foreach (var key in keys)
+							{
+								var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
+								var newValue = propEditor.ValueEditor.ConvertDbToString(prop, propType, dataTypeService);
+								value.Values[key] = newValue;
+							}
 
-                        prop2.Value = JsonConvert.SerializeObject(value);
+							prop2.Value = JsonConvert.SerializeObject(value);
+						}
+						else
+						{
+							LogHelper.Error<VortoPropertyValueEditor>($"Unabled to locate target DTD for source DTD ${value.DtdGuid}", null);
+						}
 				    }
 				}
 				catch (Exception ex)
@@ -144,35 +154,104 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 	
 			public override object ConvertDbToEditor(Property property, PropertyType propertyType, IDataTypeService dataTypeService)
 			{
-				if (property.Value == null || property.Value.ToString().IsNullOrWhiteSpace())
+				var propertyValue = property?.Value?.ToString();
+				if (propertyValue.IsNullOrWhiteSpace())
                     return string.Empty;
 
-                // Something weird is happening in core whereby ConvertDbToString is getting
-                // called loads of times on publish, forcing the property value to get converted
-                // again, which in tern screws up the values. To get round it, we create a 
-                // dummy property copying the original properties value, this way not overwriting
-                // the original property value allowing it to be re-converted again later
-                var prop2 = new Property(propertyType, property.Value);
+				// Something weird is happening in core whereby ConvertDbToEditor is getting
+				// called loads of times on publish, forcing the property value to get converted
+				// again, which in tern screws up the values. To get round it, we create a 
+				// dummy property copying the original properties value, this way not overwriting
+				// the original property value allowing it to be re-converted again later
+				var prop2 = new Property(propertyType, property.Value);
 
 				try
 				{
-					var value = JsonConvert.DeserializeObject<VortoValue>(property.Value.ToString());
-				    if (value.Values != null)
+					VortoValue value = null;
+
+					// Does the value look like JSON and does it look like a vorto value?
+					if (propertyValue.DetectIsJson() && propertyValue.IndexOf("dtdGuid") != -1)
+					{
+						value = JsonConvert.DeserializeObject<VortoValue>(propertyValue);
+					}
+					else
+					{
+						// Doesn't look like a vorto value so we are going to assume it got converted
+						// from a normal prop editor to a vorto editor, so lets construct a VortoValue
+						var dataTypeDef = dataTypeService.GetDataTypeDefinitionById(propertyType.DataTypeDefinitionId);
+
+						string primaryLanguage = null;
+
+						// Look for primary language in prevalues
+						var preValues = dataTypeService.GetPreValuesCollectionByDataTypeId(dataTypeDef.Id)?.PreValuesAsDictionary;
+						if (preValues != null)
+						{
+							// We need to store the current value inder a language key so try and find the best key to store it under
+							primaryLanguage = preValues.ContainsKey("primaryLanguage") && !preValues["primaryLanguage"].Value.IsNullOrWhiteSpace()
+								? preValues["primaryLanguage"].Value
+								: null;
+						}
+
+						// No explicit primary language set, so try and work out the best match
+						if (primaryLanguage.IsNullOrWhiteSpace())
+						{
+							var currentCulture = Thread.CurrentThread.CurrentUICulture.Name;
+							var languages = umbraco.cms.businesslogic.language.Language.GetAllAsList()
+								.Select(x => x.CultureAlias)
+								.ToList();
+
+							// Check for an exact culture match
+							primaryLanguage = languages.FirstOrDefault(x => x == currentCulture);
+
+							// Check for a close match
+							if (primaryLanguage.IsNullOrWhiteSpace())
+								primaryLanguage = languages.FirstOrDefault(x => x.Contains(currentCulture));
+
+							// Check for a close match
+							if (primaryLanguage.IsNullOrWhiteSpace())
+								primaryLanguage = languages.FirstOrDefault(x => currentCulture.Contains(x));
+
+							// Couldn't find a good enough match, just select the first language
+							if (primaryLanguage.IsNullOrWhiteSpace())
+								primaryLanguage = languages.FirstOrDefault();
+						}
+
+						if (!primaryLanguage.IsNullOrWhiteSpace())
+						{
+							value = new VortoValue
+							{
+								DtdGuid = dataTypeDef.Key,
+								Values = new Dictionary<string, object>
+								{
+									{ primaryLanguage, property.Value }
+								}
+							};
+						}
+					}
+					
+				    if (value?.Values != null)
 				    {
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
-				        var propType = new PropertyType(dtd);
+						if (dtd != null)
+						{
+							var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+							var propType = new PropertyType(dtd);
 
-				        var keys = value.Values.Keys.ToArray();
-				        foreach (var key in keys)
-				        {
-				            var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
-				            var newValue = propEditor.ValueEditor.ConvertDbToEditor(prop, propType, dataTypeService);
-				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
-				        }
+							var keys = value.Values.Keys.ToArray();
+							foreach (var key in keys)
+							{
+								var prop = new Property(propType, value.Values[key] == null ? null : value.Values[key].ToString());
+								var newValue = propEditor.ValueEditor.ConvertDbToEditor(prop, propType, dataTypeService);
+								value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
+							}
 
-                        prop2.Value = JsonConvert.SerializeObject(value);
-				    }
+							prop2.Value = JsonConvert.SerializeObject(value);
+						}
+						else
+						{
+							LogHelper.Error<VortoPropertyValueEditor>($"Unabled to locate target DTD for source DTD ${value.DtdGuid}", null);
+						}
+					}
 				}
 				catch (Exception ex)
 				{
@@ -193,17 +272,24 @@ namespace Our.Umbraco.Vorto.Web.PropertyEditors
 				    if (value.Values != null)
 				    {
 				        var dtd = VortoHelper.GetTargetDataTypeDefinition(value.DtdGuid);
-				        var preValues = ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
-				        var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
+						if (dtd != null)
+						{
+							var preValues = ApplicationContext.Current.Services.DataTypeService.GetPreValuesCollectionByDataTypeId(dtd.Id);
+							var propEditor = PropertyEditorResolver.Current.GetByAlias(dtd.PropertyEditorAlias);
 
-				        var keys = value.Values.Keys.ToArray();
-				        foreach (var key in keys)
-				        {
-				            var propData = new ContentPropertyData(value.Values[key], preValues, new Dictionary<string, object>());
-				            var newValue = propEditor.ValueEditor.ConvertEditorToDb(propData, value.Values[key]);
-				            value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
-				        }
-				    }
+							var keys = value.Values.Keys.ToArray();
+							foreach (var key in keys)
+							{
+								var propData = new ContentPropertyData(value.Values[key], preValues, new Dictionary<string, object>());
+								var newValue = propEditor.ValueEditor.ConvertEditorToDb(propData, value.Values[key]);
+								value.Values[key] = (newValue == null) ? null : JToken.FromObject(newValue);
+							}
+						}
+						else
+						{
+							LogHelper.Error<VortoPropertyValueEditor>($"Unabled to locate target DTD for source DTD ${value.DtdGuid}", null);
+						}
+					}
 				    return JsonConvert.SerializeObject(value);
 				}
 				catch (Exception ex)

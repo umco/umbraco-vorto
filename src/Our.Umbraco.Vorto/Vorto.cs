@@ -1,11 +1,28 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using Our.Umbraco.Vorto.Models;
+using Umbraco.Core;
 
 namespace Our.Umbraco.Vorto
 {
 	public static class Vorto
 	{
+		private static string _defaultFallbackCultureName;
+		public static string DefaultFallbackCultureName
+		{
+			get
+			{
+				return !_defaultFallbackCultureName.IsNullOrWhiteSpace()
+					? _defaultFallbackCultureName
+					: ConfigurationManager.AppSettings["Vorto:DefaultFallbackCultureName"];
+			}
+			set
+			{
+				_defaultFallbackCultureName = value;
+			}
+		}
+
 		#region Event Handlers
 
 		public static event EventHandler<FilterLanguagesEventArgs> FilterLanguages;

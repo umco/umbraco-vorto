@@ -1,11 +1,12 @@
 ﻿using System.Linq;
+using Umbraco.Core;
 using Our.Umbraco.Vorto.Models;
 
 namespace Our.Umbraco.Vorto.Extensions
 {
-    internal static class VortoValueExtensions
+	internal static class VortoValueExtensions
     {
-        public static string FindBestMatchCulture(this VortoValue value, string cultureName)
+        internal static string FindBestMatchCulture<T>(this VortoValue<T> value, string cultureName)
         {
             // Check for actual values
             if (value.Values == null)
@@ -17,8 +18,8 @@ namespace Our.Umbraco.Vorto.Extensions
 
             // Close match
             return cultureName.Length == 2
-                ? value.Values.Keys.FirstOrDefault(x => x.StartsWith(cultureName + "-"))
+                ? value.Values.Keys.FirstOrDefault(x => x.InvariantStartsWith(cultureName + "-"))
                 : string.Empty;
         }
-    }
+	}
 }

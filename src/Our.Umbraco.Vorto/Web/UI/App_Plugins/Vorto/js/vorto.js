@@ -337,7 +337,7 @@
 	        return currentSection;
         }
 
-		// Set the languages (this will trigger everything else to bind)
+        // Set the languages (this will trigger everything else to bind)
         var setLanguages = function(languages) {
             $scope.languages = languages;
 
@@ -362,33 +362,33 @@
             detectFilledInLanguages();
         }
 
-		// Get the languages by data type either from the cache if available, else from the API call
-		var getLanguagesByDataType = function(dataType, currentSection) {
-			// Build the cache key
+        // Get the languages by data type either from the cache if available, else from the API call
+        var getLanguagesByDataType = function(dataType, currentSection) {
+            // Build the cache key
             var languagesKey = 'getLanguages_' + currentSection + '_' + editorState.current.id + '_' + editorState.current.parentId + '_' + dataType.guid;
-            
-			// Get the promise from the cache
-			var languagesPromise = cacheService.get(languagesKey);
-			
-			// If the promise doesn't exist, create and cache the promise
-			if(!languagesPromise) {
-				languagesPromise = vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType.guid);
-				cacheService.set(languagesKey, languagesPromise);
-			} 
-			
-			// Process the promise result
-			languagesPromise.then(function(languages) {
-				setLanguages(languages);
-			});	
-		}
-		
-		// Set the data type
-        var setDataType = function(dataType, currentSection) {
-			$scope.model.value.dtdGuid = dataType.guid;
-			getLanguagesByDataType(dataType);            
+
+            // Get the promise from the cache
+            var languagesPromise = cacheService.get(languagesKey);
+
+            // If the promise doesn't exist, create and cache the promise
+            if(!languagesPromise) {
+                languagesPromise = vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType.guid);
+                cacheService.set(languagesKey, languagesPromise);
+            }
+
+            // Process the promise result
+            languagesPromise.then(function(languages) {
+                setLanguages(languages);
+            });
         }
 
-		// Get the data type by alias either from the cache if available, else from the API
+        // Set the data type
+        var setDataType = function(dataType, currentSection) {
+            $scope.model.value.dtdGuid = dataType.guid;
+            getLanguagesByDataType(dataType);            
+        }
+
+       // Get the data type by alias either from the cache if available, else from the API
         var getDataTypeByAlias = function(dataType) {
             // Stash the config in scope for reuse
             $scope.property.config = dataType.preValues;
@@ -405,46 +405,46 @@
             // Work out what section we are in
             var currentSection = getCurrentSection();
 
-			// Build the cache key
+            // Build the cache key
             var dataTypeByAliasKey = 'getDataTypeByAlias_' + currentSection + '_' + contentTypeAlias + '_' + propAlias;
-			
-			// Get the promise from the cache
+
+            // Get the promise from the cache
             var dataTypeByAliasPromise = cacheService.get(dataTypeByAliasKey);
-			
-			// If the promise doesn't exist, create and cache the promise
+
+            // If the promise doesn't exist, create and cache the promise
             if (!dataTypeByAliasPromise) {
-				dataTypeByAliasPromise = vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias);
-				cacheService.set(dataTypeByAliasKey, dataTypeByAliasPromise);
-			} 
-			
-			// Process the promise result
-			dataTypeByAliasPromise.then(function(dataType) {
-				setDataType(dataType, currentSection);
-			});
+                dataTypeByAliasPromise = vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias);
+                cacheService.set(dataTypeByAliasKey, dataTypeByAliasPromise);
+            } 
+
+            // Process the promise result
+            dataTypeByAliasPromise.then(function(dataType) {
+                setDataType(dataType, currentSection);
+            });
         };
 
-		// Load the data type by ID either from the cache if available or from the API
+        // Load the data type by ID either from the cache if available or from the API
         var getDataTypeById = function(id) {
-			// Build the cache key
-			var dataTypeByIdKey = "getDataTypeById_" + id;
-			
-			// Get the promise from the cache
-			var dataTypeByIdPromise = cacheService.get(dataTypeByIdKey);
-			
-			// If the promise doesn't exist, create and cache the promise
-			if (!dataTypeByIdPromise) {
-				dataTypeByIdPromise = vortoResources.getDataTypeById(id);
-				cacheService.set(dataTypeByIdKey, dataTypeByIdPromise);
-			}
-			
-			// Process the promise result
-			dataTypeByIdPromise.then(function(dataType) {
-				getDataTypeByAlias(dataType);
-			});
-		}
-		
+            // Build the cache key
+            var dataTypeByIdKey = "getDataTypeById_" + id;
+
+            // Get the promise from the cache
+            var dataTypeByIdPromise = cacheService.get(dataTypeByIdKey);
+
+            // If the promise doesn't exist, create and cache the promise
+            if (!dataTypeByIdPromise) {
+                dataTypeByIdPromise = vortoResources.getDataTypeById(id);
+                cacheService.set(dataTypeByIdKey, dataTypeByIdPromise);
+            }
+
+            // Process the promise result
+            dataTypeByIdPromise.then(function(dataType) {
+                getDataTypeByAlias(dataType);
+            });
+        }
+
         // Load the datatype
-		getDataTypeById($scope.model.config.dataType.guid);
+        getDataTypeById($scope.model.config.dataType.guid);
     }
 ]);
 

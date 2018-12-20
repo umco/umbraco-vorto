@@ -319,24 +319,25 @@
         }
 
         var getCurrentSection = function() {
-            var currentSection = appState.getSectionState("currentSection");
+        	var currentSection = appState.getSectionState("currentSection");
 
             // The newer back office now shows a preview of property editors in the doc type editor
             // so the current section will always be settings. If we are in the settings section
             // then look for why type of content editor we are and set the current section accordingly.
             // NB: Member types is normally in the members section so that should actually work.
-            if (currentSection === "settings") {
-                if (window.location.hash.match(new RegExp("mediaTypes"))) {
-                    currentSection = "media";
-                }
-                else if (window.location.hash.match(new RegExp("documentTypes"))) {
-                    currentSection = "content";
-                }
-            }
+        	if (currentSection === "settings") {
+        		if (window.location.hash.match(new RegExp("mediaTypes"))) {
+        			currentSection = "media";
+        		}
+        		else if (window.location.hash.match(new RegExp("documentTypes"))) {
+        			currentSection = "content";
+        		}
+        	}
 
-            return currentSection;
+	        return currentSection;
         }
 
+		// Set the languages (this will trigger everything else to bind)
         var setLanguages = function(languages) {
             $scope.languages = languages;
 
@@ -361,26 +362,34 @@
             detectFilledInLanguages();
         }
 
-        var setDataType2 = function(dataType2, currentSection) {
-            $scope.model.value.dtdGuid = dataType2.guid;
-
-            var languagesKey = 'getLanguages_' + currentSection + '_' + editorState.current.id + '_' + editorState.current.parentId + '_' + dataType2.guid;
-            var languagesPromise = cacheService.get(languagesKey);
-            if (!languagesPromise) {
-                languagesPromise = vortoResources.getLanguages(currentSection,
-                    editorState.current.id,
-                    editorState.current.parentId,
-                    dataType2.guid);
-                cacheService.set(languagesKey, languagesPromise);
-            }
-
-            // Load the languages (this will trigger everything else to bind)
-            languagesPromise.then(function(languages) {
-                setLanguages(languages);
-            });
+		// Get the languages by data type either from the cache if available, else from the API call
+		var getLanguagesByDataType = function(dataType, currentSection) {
+			// Build the cache key
+            var languagesKey = 'getLanguages_' + currentSection + '_' + editorState.current.id + '_' + editorState.current.parentId + '_' + dataType.guid;
+            
+			// Get the promise from the cache
+			var languagesPromise = cacheService.get(languagesKey);
+			
+			// If the promise doesn't exist, create and cache the promise
+			if(!languagesPromise) {
+				languagesPromise = vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType.guid);
+				cacheService.set(languagesKey, languagesPromise);
+			} 
+			
+			// Process the promise result
+			languagesPromise.then(function(languages) {
+				setLanguages(languages);
+			});	
+		}
+		
+		// Set the data type
+        var setDataType = function(dataType, currentSection) {
+			$scope.model.value.dtdGuid = dataType.guid;
+			getLanguagesByDataType(dataType);            
         }
 
-        var setDataType = function(dataType) {
+		// Get the data type by alias either from the cache if available, else from the API
+        var getDataTypeByAlias = function(dataType) {
             // Stash the config in scope for reuse
             $scope.property.config = dataType.preValues;
 
@@ -396,30 +405,46 @@
             // Work out what section we are in
             var currentSection = getCurrentSection();
 
+			// Build the cache key
             var dataTypeByAliasKey = 'getDataTypeByAlias_' + currentSection + '_' + contentTypeAlias + '_' + propAlias;
+			
+			// Get the promise from the cache
             var dataTypeByAliasPromise = cacheService.get(dataTypeByAliasKey);
+			
+			// If the promise doesn't exist, create and cache the promise
             if (!dataTypeByAliasPromise) {
-                dataTypeByAliasPromise = vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias);
-                cacheService.set(dataTypeByAliasKey, dataTypeByAliasPromise);
-            }
-
-            // Get the current properties datatype
-            dataTypeByAliasPromise.then(function(dataType2) {
-                setDataType2(dataType2, currentSection);
-            });
+				dataTypeByAliasPromise = vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias);
+				cacheService.set(dataTypeByAliasKey, dataTypeByAliasPromise);
+			} 
+			
+			// Process the promise result
+			dataTypeByAliasPromise.then(function(dataType) {
+				setDataType(dataType, currentSection);
+			});
         };
 
-        var dataTypeByIdKey = "getDataTypeById_" + $scope.model.config.dataType.guid;
-        var dataTypeByIdPromise = cacheService.get(dataTypeByIdKey);
-        if (!dataTypeByIdPromise) {
-            // Load the datatype
-            dataTypeByIdPromise = vortoResources.getDataTypeById($scope.model.config.dataType.guid);
-            cacheService.set(dataTypeByIdKey, dataTypeByIdPromise);
-        }
-
-        dataTypeByIdPromise.then(function(dataType) {
-            setDataType(dataType);
-        });
+		// Load the data type by ID either from the cache if available or from the API
+        var getDataTypeById = function(id) {
+			// Build the cache key
+			var dataTypeByIdKey = "getDataTypeById_" + id;
+			
+			// Get the promise from the cache
+			var dataTypeByIdPromise = cacheService.get(dataTypeByIdKey);
+			
+			// If the promise doesn't exist, create and cache the promise
+			if (!dataTypeByIdPromise) {
+				dataTypeByIdPromise = vortoResources.getDataTypeById(id);
+				cacheService.set(dataTypeByIdKey, dataTypeByIdPromise);
+			}
+			
+			// Process the promise result
+			dataTypeByIdPromise.then(function(dataType) {
+				getDataTypeByAlias(dataType);
+			});
+		}
+		
+        // Load the datatype
+		getDataTypeById($scope.model.config.dataType.guid);
     }
 ]);
 

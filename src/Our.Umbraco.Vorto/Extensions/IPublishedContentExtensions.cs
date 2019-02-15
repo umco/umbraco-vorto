@@ -99,10 +99,14 @@ namespace Our.Umbraco.Vorto.Extensions
 				return defaultValue;
 			}
 
-			var vortoModel = prop.Value as VortoValue<T>;
+			var vortoModel = prop.Value as IVortoValue;
 			if (vortoModel != null)
 			{
-				return vortoModel.GetValue(cultureName, defaultValue);
+                var typedVortoModel = vortoModel.CastToVortoValue<T>();
+                if (typedVortoModel != null)
+                {
+                    return typedVortoModel.GetValue(cultureName, defaultValue);
+                }
 			}
 
 			return recursive && content.Parent != null

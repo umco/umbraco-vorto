@@ -11,26 +11,26 @@ namespace Our.Umbraco.Vorto.Models
     /// </summary>
     public partial class VortoValue<T> : IVortoValue<T>
     {
-		/// <summary>
-		/// Gets or sets the collection of language independent values
-		/// </summary>
-		[JsonProperty("values")]
-		public IDictionary<string, T> Values { get; set; }
-
-		/// <summary>
-		/// Gets or sets the data type definition id
-		/// </summary>
-		[JsonProperty("dtdGuid")]
-		public Guid DtdGuid { get; set; }
-
-		public VortoValue()
-		{
-			Values = new Dictionary<string, T>();
-		}
+        /// <summary>
+        /// Gets or sets the collection of language independent values
+        /// </summary>
+        [JsonProperty("values")]
+        public IDictionary<string, T> Values { get; set; }
 
         /// <summary>
-		/// Attempts to cast the vorto value instance to another generic type.
-		/// </summary>
+        /// Gets or sets the data type definition id
+        /// </summary>
+        [JsonProperty("dtdGuid")]
+        public Guid DtdGuid { get; set; }
+
+        public VortoValue()
+        {
+            Values = new Dictionary<string, T>();
+        }
+
+        /// <summary>
+        /// Attempts to cast the vorto value instance to another generic type.
+        /// </summary>
         /// <returns>The cast vorto value instance, or null if no values have a value.</returns>
         public VortoValue<TAs> CastToVortoValue<TAs>()
         {

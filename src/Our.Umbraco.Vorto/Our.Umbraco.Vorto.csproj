@@ -226,6 +226,8 @@
     <Compile Include="Models\DataTypeInfo.cs" />
     <Compile Include="Converters\VortoValueConverter.cs" />
     <Compile Include="Extensions\IPublishedContentExtensions.cs" />
+    <Compile Include="Models\IVortoValue.cs" />
+    <Compile Include="Models\IVortoValueOfT.cs" />
     <Compile Include="Models\Language.cs" />
     <Compile Include="Models\VortoValue.cs" />
     <Compile Include="Models\VortoValueOfTApi.cs" />

@@ -1,4 +1,4 @@
-﻿angular.module("umbraco").controller("Our.Umbraco.PropertyEditors.Vorto.vortoEditor", [
+angular.module("umbraco").controller("Our.Umbraco.PropertyEditors.Vorto.vortoEditor", [
     '$scope',
     '$rootScope',
     'appState',
@@ -7,8 +7,9 @@
     'umbPropEditorHelper',
     'Our.Umbraco.Resources.Vorto.vortoResources',
     'Our.Umbraco.Services.Vorto.vortoLocalStorageService',
-    function ($scope, $rootScope, appState, editorState, formHelper, umbPropEditorHelper, vortoResources, localStorageService) {
-			
+    'Our.Umbraco.Services.Vorto.vortoCacheService',
+    function ($scope, $rootScope, appState, editorState, formHelper, umbPropEditorHelper, vortoResources, localStorageService, cacheService) {
+
         // Get node context
         // DTGE/NC expose the context on the scope
         // to avoid overwriting the editorState
@@ -336,9 +337,59 @@
 	        return currentSection;
         }
 
-        // Load the datatype
-        vortoResources.getDataTypeById($scope.model.config.dataType.guid).then(function (dataType) {
+        // Set the languages (this will trigger everything else to bind)
+        var setLanguages = function(languages) {
+            $scope.languages = languages;
 
+            if (!$scope.model.value.values) {
+                $scope.model.value.values = {};
+            }
+
+            _.each($scope.languages, function (language) {
+                if (!$scope.model.value.values.hasOwnProperty(language.isoCode)) {
+                    $scope.model.value.values[language.isoCode] = $scope.model.value.values[language.isoCode];
+                }
+            });
+
+            $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
+                return itm.isDefault;
+            });
+
+            reSync();
+
+            validateProperty();
+
+            detectFilledInLanguages();
+        }
+
+        // Get the languages by data type either from the cache if available, else from the API call
+        var getLanguagesByDataType = function(dataType, currentSection) {
+            // Build the cache key
+            var languagesKey = 'getLanguages_' + currentSection + '_' + editorState.current.id + '_' + editorState.current.parentId + '_' + dataType.guid;
+
+            // Get the promise from the cache
+            var languagesPromise = cacheService.get(languagesKey);
+
+            // If the promise doesn't exist, create and cache the promise
+            if(!languagesPromise) {
+                languagesPromise = vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType.guid);
+                cacheService.set(languagesKey, languagesPromise);
+            }
+
+            // Process the promise result
+            languagesPromise.then(function(languages) {
+                setLanguages(languages);
+            });
+        }
+
+        // Set the data type
+        var setDataType = function(dataType, currentSection) {
+            $scope.model.value.dtdGuid = dataType.guid;
+            getLanguagesByDataType(dataType);            
+        }
+
+       // Get the data type by alias either from the cache if available, else from the API
+        var getDataTypeByAlias = function(dataType) {
             // Stash the config in scope for reuse
             $scope.property.config = dataType.preValues;
 
@@ -354,41 +405,46 @@
             // Work out what section we are in
 			var currentSection = getCurrentSection();
 
-        	// Get the current properties datatype
-            vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias).then(function (dataType2) {
+            // Build the cache key
+            var dataTypeByAliasKey = 'getDataTypeByAlias_' + currentSection + '_' + contentTypeAlias + '_' + propAlias;
 
-                $scope.model.value.dtdGuid = dataType2.guid;
+            // Get the promise from the cache
+            var dataTypeByAliasPromise = cacheService.get(dataTypeByAliasKey);
 
-                // Load the languages (this will trigger everything else to bind)
-                vortoResources.getLanguages(currentSection, editorState.current.id, editorState.current.parentId, dataType2.guid)
-                    .then(function (languages) {
+            // If the promise doesn't exist, create and cache the promise
+            if (!dataTypeByAliasPromise) {
+                dataTypeByAliasPromise = vortoResources.getDataTypeByAlias(currentSection, contentTypeAlias, propAlias);
+                cacheService.set(dataTypeByAliasKey, dataTypeByAliasPromise);
+            } 
 
-                        $scope.languages = languages;
-
-                        if (!$scope.model.value.values) {
-                            $scope.model.value.values = {};
-                        }
-
-                        _.each($scope.languages, function (language) {
-                            if (!$scope.model.value.values.hasOwnProperty(language.isoCode)) {
-                                $scope.model.value.values[language.isoCode] = $scope.model.value.values[language.isoCode];
-                            }
-                        });
-
-                        $scope.currentLanguage = $scope.activeLanguage = _.find(languages, function (itm) {
-                            return itm.isDefault;
-                        });
-
-                        reSync();
-
-                        validateProperty();
-
-                        detectFilledInLanguages();
-                    });
+            // Process the promise result
+            dataTypeByAliasPromise.then(function(dataType) {
+                setDataType(dataType, currentSection);
             });
-        });
+        };
 
+        // Load the data type by ID either from the cache if available or from the API
+        var getDataTypeById = function(id) {
+            // Build the cache key
+            var dataTypeByIdKey = "getDataTypeById_" + id;
 
+            // Get the promise from the cache
+            var dataTypeByIdPromise = cacheService.get(dataTypeByIdKey);
+
+            // If the promise doesn't exist, create and cache the promise
+            if (!dataTypeByIdPromise) {
+                dataTypeByIdPromise = vortoResources.getDataTypeById(id);
+                cacheService.set(dataTypeByIdKey, dataTypeByIdPromise);
+            }
+
+            // Process the promise result
+            dataTypeByIdPromise.then(function(dataType) {
+                getDataTypeByAlias(dataType);
+            });
+        }
+
+        // Load the datatype
+        getDataTypeById($scope.model.config.dataType.guid);
     }
 ]);
 
@@ -550,6 +606,25 @@ angular.module('umbraco.services').factory('Our.Umbraco.Services.Vorto.vortoLoca
             },
             set: function (key, obj) {
                 stash(key, JSON.stringify(obj));
+            }
+        };
+    }
+);
+
+angular.module('umbraco.services').factory('Our.Umbraco.Services.Vorto.vortoCacheService',
+    function () {
+
+        var cache = {};
+
+        return {
+            get: function (key) {
+                return cache[key];
+            },
+            set: function (key, obj) {
+                cache[key] = obj;
+            },
+            clear: function () {
+                cache = {};
             }
         };
     }

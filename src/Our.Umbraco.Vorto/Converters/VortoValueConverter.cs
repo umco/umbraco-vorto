@@ -70,6 +70,8 @@ namespace Our.Umbraco.Vorto.Converters
 					foreach (var key in modelKeys)
 					{
 						var value = innerPropType.ConvertSourceToObject(vortoValue.Values[key], preview);
+                        if(value == null)
+                            continue;
 						if (innerPropType.ClrType.IsAssignableFrom(value.GetType()))
 						{
 							valuesAdd.Invoke(valuesProp.GetValue(model), new[] { key, value });
